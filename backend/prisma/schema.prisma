@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  name      String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  bosquejos Bosquejo[]
+
+  @@map("users")
+}
+
+model Bosquejo {
+  id           String   @id @default(cuid())
+  titulo       String
+  cita         String?
+  introduccion String?
+  aplicacion   String?
+  conclusion   String?
+  puntos       Json     @default("[]")
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("bosquejos")
+}

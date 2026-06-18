@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production'
-    ? ['https://tu-frontend.vercel.app']
+    ? ['https://bosq-seven.vercel.app']
     : 'http://localhost:5173',
   credentials: true
 }));

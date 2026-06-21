@@ -10,11 +10,16 @@ const Dashboard = () => {
   const { user } = useAuthStore();
   const { bosquejos, isLoading, loadBosquejos, deleteBosquejo } = useBosquejoStore();
 
-  useEffect(() => { loadBosquejos(); }, []);
+  useEffect(() => {
+    loadBosquejos();
+  }, []);
 
   const handleDelete = async (id) => {
     if (window.confirm('¿Eliminar este bosquejo?')) await deleteBosquejo(id);
   };
+
+  // Asegurar que bosquejos sea un array (por si acaso)
+  const bosquejosList = Array.isArray(bosquejos) ? bosquejos : [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -33,18 +38,21 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <p className="text-sm text-gray-500">Total de Bosquejos</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{bosquejos.length}</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{bosquejosList.length}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <p className="text-sm text-gray-500">Última Actualización</p>
             <p className="mt-2 text-lg font-medium text-gray-900 dark:text-white">
-              {bosquejos.length > 0 ? new Date(bosquejos[0].updatedAt).toLocaleDateString('es-ES') : 'Sin bosquejos'}
+              {bosquejosList.length > 0 ? new Date(bosquejosList[0].updatedAt).toLocaleDateString('es-ES') : 'Sin bosquejos'}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <p className="text-sm text-gray-500">Puntos con Versículos</p>
             <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
-              {bosquejos.reduce((total, b) => total + (Array.isArray(b.puntos) ? b.puntos.filter(p => p.versos).length : 0), 0)}
+              {bosquejosList.reduce((total, b) => {
+                const puntos = Array.isArray(b.puntos) ? b.puntos : [];
+                return total + puntos.filter(p => p.versos).length;
+              }, 0)}
             </p>
           </div>
         </div>
@@ -52,7 +60,7 @@ const Dashboard = () => {
         <h2 className="text-2xl font-serif font-semibold text-gray-900 dark:text-white mb-4">Últimos Bosquejos</h2>
         {isLoading ? (
           <div className="text-center py-12"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div></div>
-        ) : bosquejos.length === 0 ? (
+        ) : bosquejosList.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
             <p className="text-gray-500 dark:text-gray-400">No tienes bosquejos aún. ¡Comienza a crear uno!</p>
             <Link to="/bosquejos/nuevo" className="mt-4 inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors">
@@ -62,9 +70,9 @@ const Dashboard = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {bosquejos.slice(0, 3).map((b) => <BosquejoCard key={b.id} bosquejo={b} onDelete={handleDelete} />)}
+              {bosquejosList.slice(0, 3).map((b) => <BosquejoCard key={b.id} bosquejo={b} onDelete={handleDelete} />)}
             </div>
-            {bosquejos.length > 3 && (
+            {bosquejosList.length > 3 && (
               <div className="mt-6 text-center">
                 <Link to="/bosquejos" className="inline-flex items-center px-6 py-2 border border-primary-600 text-primary-600 hover:bg-primary-50 dark:text-primary-400 rounded-lg transition-colors">
                   Ver todos los bosquejos

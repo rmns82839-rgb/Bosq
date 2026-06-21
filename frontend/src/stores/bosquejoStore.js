@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { bosquejoService } from '../services/bosquejoService';
-import toast from 'react-hot-toast';
 
 export const useBosquejoStore = create((set, get) => ({
   bosquejos: [],
@@ -8,61 +7,92 @@ export const useBosquejoStore = create((set, get) => ({
   isLoading: false,
   error: null,
 
+  // ===== SETTER =====
+  setCurrentBosquejo: (bosquejo) => set({ currentBosquejo: bosquejo }),
+
+  // ===== LOAD ALL =====
   loadBosquejos: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
-      const response = await bosquejoService.getAll();
-      set({ bosquejos: response.data, isLoading: false });
+      const data = await bosquejoService.getAll();
+      set({ bosquejos: Array.isArray(data) ? data : [], isLoading: false });
     } catch (error) {
-      set({ error: 'Error al cargar bosquejos', isLoading: false });
+      console.error('Error loading bosquejos:', error);
+      set({ bosquejos: [], error: error.message, isLoading: false });
     }
   },
 
+  // ===== LOAD BY ID (con validación) =====
   loadBosquejo: async (id) => {
-    set({ isLoading: true });
+    // ✅ Si no hay ID, no hacer la llamada
+    if (!id) {
+      console.warn('loadBosquejo called with undefined id');
+      set({ error: 'ID de bosquejo no válido', isLoading: false });
+      return null;
+    }
+    set({ isLoading: true, error: null });
     try {
-      const response = await bosquejoService.getById(id);
-      set({ currentBosquejo: response.data, isLoading: false });
-      return response.data;
+      const data = await bosquejoService.getById(id);
+      set({ currentBosquejo: data, isLoading: false });
+      return data;
     } catch (error) {
-      set({ error: 'Error al cargar bosquejo', isLoading: false });
+      console.error('Error loading bosquejo:', error);
+      set({ error: error.message, isLoading: false });
+      return null;
     }
   },
 
+  // ===== CREATE =====
   createBosquejo: async (data) => {
+    set({ isLoading: true, error: null });
     try {
-      const response = await bosquejoService.create(data);
-      set((state) => ({ bosquejos: [response.data, ...state.bosquejos] }));
-      toast.success('Bosquejo creado correctamente');
-      return response.data;
-    } catch (error) {
-      toast.error('Error al crear bosquejo');
-      throw error;
-    }
-  },
-
-  updateBosquejo: async (id, data) => {
-    try {
-      const response = await bosquejoService.update(id, data);
+      const newBosquejo = await bosquejoService.create(data);
       set((state) => ({
-        bosquejos: state.bosquejos.map((b) => b.id === id ? response.data : b),
-        currentBosquejo: response.data,
+        bosquejos: [newBosquejo, ...(state.bosquejos || [])],
+        currentBosquejo: newBosquejo,
+        isLoading: false,
       }));
-      toast.success('Bosquejo actualizado');
-      return response.data;
+      return newBosquejo;
     } catch (error) {
-      toast.error('Error al actualizar bosquejo');
+      console.error('Error creating bosquejo:', error);
+      set({ error: error.message, isLoading: false });
       throw error;
     }
   },
 
+  // ===== UPDATE =====
+  updateBosquejo: async (id, data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const updated = await bosquejoService.update(id, data);
+      set((state) => ({
+        bosquejos: (state.bosquejos || []).map((b) =>
+          b.id === id ? updated : b
+        ),
+        currentBosquejo: updated,
+        isLoading: false,
+      }));
+      return updated;
+    } catch (error) {
+      console.error('Error updating bosquejo:', error);
+      set({ error: error.message, isLoading: false });
+      throw error;
+    }
+  },
+
+  // ===== DELETE =====
   deleteBosquejo: async (id) => {
+    set({ isLoading: true, error: null });
     try {
       await bosquejoService.delete(id);
-      set((state) => ({ bosquejos: state.bosquejos.filter((b) => b.id !== id) }));
-      toast.success('Bosquejo eliminado');
+      set((state) => ({
+        bosquejos: (state.bosquejos || []).filter((b) => b.id !== id),
+        currentBosquejo: state.currentBosquejo?.id === id ? null : state.currentBosquejo,
+        isLoading: false,
+      }));
     } catch (error) {
-      toast.error('Error al eliminar bosquejo');
+      console.error('Error deleting bosquejo:', error);
+      set({ error: error.message, isLoading: false });
       throw error;
     }
   },

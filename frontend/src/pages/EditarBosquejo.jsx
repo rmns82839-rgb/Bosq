@@ -255,6 +255,7 @@ const EditarBosquejo = () => {
                 </div>
               </div>
               <div className="actions">
+                <button className="pdf" onClick={() => handleSave()} style={{ background: '#8e44ad', color: 'white', borderColor: '#8e44ad' }}>💾 Guardar Cambios</button>
                 <button className="pdf" onClick={() => window.print()}>📄 Exportar PDF</button>
                 <button onClick={() => {
                   const blob = new Blob([document.getElementById('finalDocument').textContent.trim()], { type: 'text/plain;charset=utf-8' });

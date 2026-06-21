@@ -70,10 +70,13 @@ body.dark-mode {
 
 html, body {
   height: 100%;
-  overflow: hidden;
   background: var(--bg-body);
   font-family: var(--font-family);
   transition: background 0.3s, color 0.3s;
+}
+
+body.notebook-page {
+  overflow: hidden;
 }
 
 /* ===== CUADERNO (Wrapper) ===== */

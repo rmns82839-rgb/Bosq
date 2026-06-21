@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Spiral from './Spiral';
 import Page from './Page';
 import { useBosquejoStore } from '../../stores/bosquejoStore';
 
 const NotebookLayout = ({ renderPage, onSave, onPuntoAgregado }) => {
   const { currentBosquejo } = useBosquejoStore();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    document.body.classList.add('notebook-page');
+    return () => document.body.classList.remove('notebook-page');
+  }, []);
   const [pages, setPages] = useState([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -99,6 +106,9 @@ const NotebookLayout = ({ renderPage, onSave, onPuntoAgregado }) => {
           </button>
           <button className="btn-config" id="darkModeBtn" onClick={() => document.body.classList.toggle('dark-mode')}>
             🌙
+          </button>
+          <button className="btn-config" title="Volver al panel" onClick={() => navigate('/')}>
+            🏠
           </button>
           <span className="progress-text">
             Página {currentPageIndex+1} de {pages.length}

@@ -3,6 +3,10 @@
 // Reemplaza el lector propio (roto). En móvil, el enlace abre la app YouVersion
 // si está instalada; si no, cae al lector web. Cero mantenimiento, sin líos de
 // licencia (la RVR1960 tiene derechos de autor; YouVersion ya la licenció).
+//
+// Tolerante a errores de tecleo: acepta ":", ".", "-" o combinaciones como
+// separador entre capítulo y versículo, y reconoce nombres de libro con una
+// letra cambiada, faltante o transpuesta (ej. "jaun" -> "juan").
 // ============================================================================
 
 const RVR1960_VERSION_ID = 149; // id de la RVR1960 en Bible.com
@@ -28,6 +32,7 @@ const USFM = {
   '1juan': '1JN', '2juan': '2JN', '3juan': '3JN', judas: 'JUD',
   apocalipsis: 'REV', revelacion: 'REV', apocalipse: 'REV',
 };
+const LIBROS = Object.keys(USFM);
 
 // Normaliza: minúsculas, sin acentos, sin espacios ni puntos.
 const normaliza = (s) =>
@@ -36,19 +41,66 @@ const normaliza = (s) =>
     .replace(/[\s.]/g, '');
 
 /**
- * Convierte una cita ("Apocalipsis 1:8", "1 Juan 4:7-9", "Salmos 23") en la
- * URL de la RVR1960 en Bible.com. Devuelve null si no puede interpretar la cita.
+ * Distancia de edición (Optimal String Alignment): cuenta inserciones,
+ * borrados, sustituciones y transposiciones de letras adyacentes como
+ * 1 solo cambio — así "jaun" queda a distancia 1 de "juan", no 2.
+ */
+function distancia(a, b) {
+  const d = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) d[i][0] = i;
+  for (let j = 0; j <= b.length; j++) d[0][j] = j;
+
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      const costo = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + costo
+      );
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + costo);
+      }
+    }
+  }
+  return d[a.length][b.length];
+}
+
+/** Busca el código USFM del libro, tolerando pequeños errores de tecleo. */
+function buscarLibro(nombreNormalizado) {
+  if (USFM[nombreNormalizado]) return USFM[nombreNormalizado];
+
+  let mejorLibro = null;
+  let mejorDistancia = Infinity;
+  for (const libro of LIBROS) {
+    const d = distancia(nombreNormalizado, libro);
+    if (d < mejorDistancia) {
+      mejorDistancia = d;
+      mejorLibro = libro;
+    }
+  }
+
+  // Tolerancia proporcional al largo del nombre: nombres cortos ("rut",
+  // "job") solo admiten 1 cambio; nombres largos admiten hasta 2.
+  const tolerancia = Math.max(1, Math.floor(mejorLibro.length / 5));
+  return mejorDistancia <= tolerancia ? USFM[mejorLibro] : null;
+}
+
+/**
+ * Convierte una cita ("Apocalipsis 1:8", "1 Juan 4:7-9", "jaun 3.14",
+ * "juan 14-.6") en la URL de la RVR1960 en Bible.com. Devuelve null si no
+ * puede interpretar la cita en absoluto (libro irreconocible).
  */
 export function youVersionUrl(cita, versionId = RVR1960_VERSION_ID) {
   if (!cita || typeof cita !== 'string') return null;
 
-  // Separa "Libro" de "Capítulo[:Versículo[-Versículo]]".
-  // Captura: (nombre con posibles números y espacios) (cap) [ : verso [ - verso ] ]
-  const m = cita.trim().match(/^(.+?)\s+(\d+)(?::(\d+)(?:-(\d+))?)?$/);
+  // Libro, luego capítulo, luego —opcionalmente— cualquier separador no
+  // numérico (":", ".", "-", "-.", etc.) y el versículo, con rango opcional.
+  const m = cita.trim().match(/^(.+?)\s+(\d+)(?:[^\d]+(\d+)(?:-(\d+))?)?\s*$/);
   if (!m) return null;
 
   const [, libroRaw, cap, versoIni, versoFin] = m;
-  const usfm = USFM[normaliza(libroRaw)];
+  const usfm = buscarLibro(normaliza(libroRaw));
   if (!usfm) return null;
 
   // Referencia estilo Bible.com: REV.1.8 | REV.1.8-9 | REV.1 (capítulo completo)

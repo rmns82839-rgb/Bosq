@@ -442,6 +442,7 @@
 }
 
 .vb-progreso-segmento {
+  min-width: 3px;
   flex: 1;
   height: 6px;
   border-radius: 3px;
@@ -456,6 +457,13 @@
 
 .vb-progreso-activo {
   background: var(--primary-color, #8e44ad);
+  height: 9px;
+  transform: translateY(-1.5px);
+}
+
+.vb-progreso-visitado {
+  background: var(--primary-light, #a569bd);
+  opacity: 0.55;
 }
 
 .vb-progreso-etiqueta {
@@ -533,4 +541,29 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 8px;
+}
+
+/* ── Resaltado de lectura en el texto (VerBosquejo) ──────────────
+   Igual idea que la barra de progreso, aplicada al propio bloque:
+   lo leído se atenúa, lo actual se resalta. */
+.vb-texto-normal { transition: opacity 0.3s, background 0.3s; }
+
+.vb-texto-visitado {
+  opacity: 0.5;
+  transition: opacity 0.3s, background 0.3s;
+}
+
+.vb-texto-activo {
+  opacity: 1;
+  background: rgba(142, 68, 173, 0.06);
+  border-left: 3px solid var(--primary-color, #8e44ad);
+  padding: 6px 10px;
+  margin-left: -13px;
+  border-radius: 0 6px 6px 0;
+  transition: opacity 0.3s, background 0.3s, border-color 0.3s;
+}
+.dark .vb-texto-activo { background: rgba(165, 105, 189, 0.12); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vb-texto-normal, .vb-texto-visitado, .vb-texto-activo { transition: none; }
 }

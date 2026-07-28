@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { PencilIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
@@ -6,7 +6,7 @@ import { useBosquejoStore } from '../stores/bosquejoStore';
 import Header from '../components/common/Header';
 import { VersiculoLink } from '../lib/bibliaLink';
 import { decodificarSeccion } from '../lib/bosquejoSecciones';
-import { renderTextoConNotas } from '../lib/textoConNotas';
+import { renderTextoConNotas, tieneTextoVisible } from '../lib/textoConNotas';
 import '../styles/bosquejo-editor.css';
 
 const ROMANOS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
@@ -52,21 +52,22 @@ function ModalNota({ titulo, texto, onCerrar }) {
   );
 }
 
-/* ── Un punto y sus subpuntos, recursivo ─────────────────────── */
-function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota }) {
+/* ── Un punto y sus subpuntos, recursivo ─────────────────────
+   Cada punto y cada subpunto — sin importar el nivel — se registra
+   como una parada de la barra de progreso. */
+function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota, estadoDe }) {
   const subs = Array.isArray(punto.subpuntos) ? punto.subpuntos : [];
   const cuerpo = punto.descripcion ?? punto.desarrollo ?? '';
 
   const tamanos = ['text-lg', 'text-base', 'text-sm'];
   const sangrias = ['ml-0', 'ml-5', 'ml-9'];
-
-  const refCallback = nivel === 0 ? (el) => registrarRef(punto.id, el) : undefined;
+  const estado = estadoDe(punto.id);
 
   return (
     <div
-      ref={refCallback}
-      data-punto-id={nivel === 0 ? punto.id : undefined}
-      className={`mt-4 ${sangrias[nivel] || 'ml-9'} ${nivel === 0 ? 'scroll-mt-28' : ''}`}
+      ref={(el) => registrarRef(punto.id, el)}
+      data-punto-id={punto.id}
+      className={`mt-4 scroll-mt-28 ${sangrias[nivel] || 'ml-9'} vb-texto-${estado}`}
     >
       <div className="flex gap-3">
         <span
@@ -117,6 +118,7 @@ function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota }) {
               nivel={nivel + 1}
               registrarRef={registrarRef}
               abrirNota={abrirNota}
+              estadoDe={estadoDe}
             />
           ))}
         </div>
@@ -125,41 +127,54 @@ function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota }) {
   );
 }
 
-/* ── Barra de progreso ────────────────────────────────────────── */
-function BarraProgreso({ puntos, activo, onSaltar }) {
-  if (puntos.length === 0) return null;
+/* ── Barra de progreso — acompaña TODO el mensaje: Introducción,
+   cada punto, cada subpunto, Aplicación, Conclusión. ─────────── */
+function BarraProgreso({ paradas, activo, maxVisto, onSaltar }) {
+  if (paradas.length === 0) return null;
 
-  const i = puntos.findIndex((p) => p.id === activo);
-  const etiqueta =
-    i === -1 ? null : `Punto ${marcador(0, i)} de ${puntos.length}${puntos[i].titulo ? ' — ' + puntos[i].titulo : ''}`;
+  const i = paradas.findIndex((p) => p.id === activo);
+  const etiqueta = i === -1 ? null : `${i + 1} de ${paradas.length} — ${paradas[i].etiqueta}`;
 
   return (
     <div className="vb-progreso-envoltura">
       <div className="vb-progreso-segmentos">
-        {puntos.map((p, idx) => (
-          <button
-            key={p.id}
-            type="button"
-            className={`vb-progreso-segmento ${p.id === activo ? 'vb-progreso-activo' : ''}`}
-            onClick={() => onSaltar(p.id)}
-            title={p.titulo || `Punto ${marcador(0, idx)}`}
-            aria-current={p.id === activo}
-          />
-        ))}
+        {paradas.map((p, idx) => {
+          const esActivo = p.id === activo;
+          const yaVisitado = idx <= maxVisto && !esActivo;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              className={[
+                'vb-progreso-segmento',
+                esActivo && 'vb-progreso-activo',
+                yaVisitado && 'vb-progreso-visitado',
+              ].filter(Boolean).join(' ')}
+              onClick={() => onSaltar(p.id)}
+              title={p.etiqueta}
+              aria-current={esActivo}
+            />
+          );
+        })}
       </div>
       {etiqueta && <p className="vb-progreso-etiqueta">{etiqueta}</p>}
     </div>
   );
 }
 
-/* Sección con uno o más campos con rótulo (Gancho/Conexión, Resumen/Llamado…)
-   y un enlace de nota opcional para la sección completa. */
-function SeccionCampos({ titulo, campos, notas, abrirNota }) {
+/* Sección con uno o más campos con rótulo (Gancho/Conexión, Resumen/Llamado…),
+   registrada también como parada de la barra de progreso. */
+function SeccionCampos({ id, titulo, campos, notas, abrirNota, registrarRef, estadoDe }) {
   const conContenido = campos.filter((c) => c.texto?.trim());
   if (conContenido.length === 0 && !notas?.trim()) return null;
+  const estado = estadoDe(id);
 
   return (
-    <section className="mt-8">
+    <section
+      ref={(el) => registrarRef(id, el)}
+      data-punto-id={id}
+      className={`mt-8 scroll-mt-28 vb-texto-${estado}`}
+    >
       <div className="flex items-center justify-between gap-3 mb-2">
         <h2 className="text-xl font-serif font-semibold text-gray-800 dark:text-gray-200">
           {titulo}
@@ -190,6 +205,17 @@ function SeccionCampos({ titulo, campos, notas, abrirNota }) {
   );
 }
 
+/** Recorre puntos y subpuntos (cualquier nivel) y los agrega como paradas,
+ * en el mismo orden en que se leen. */
+function recolectarPuntos(lista, nivel, paradas) {
+  lista.forEach((p, i) => {
+    paradas.push({ id: p.id, etiqueta: p.titulo || `Punto ${marcador(nivel, i)}` });
+    if (Array.isArray(p.subpuntos) && p.subpuntos.length > 0) {
+      recolectarPuntos(p.subpuntos, nivel + 1, paradas);
+    }
+  });
+}
+
 const VerBosquejo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -197,11 +223,12 @@ const VerBosquejo = () => {
   const [fallo, setFallo] = useState(null);
   const [nota, setNota] = useState(null);
   const [activo, setActivo] = useState(null);
+  const [maxVisto, setMaxVisto] = useState(-1);
 
   const refsPuntos = useRef(new Map());
-  const registrarRef = useCallback((idPunto, el) => {
-    if (el) refsPuntos.current.set(idPunto, el);
-    else refsPuntos.current.delete(idPunto);
+  const registrarRef = useCallback((idParada, el) => {
+    if (el) refsPuntos.current.set(idParada, el);
+    else refsPuntos.current.delete(idParada);
   }, []);
 
   useEffect(() => {
@@ -225,9 +252,44 @@ const VerBosquejo = () => {
   const aplic = decodificarSeccion(currentBosquejo?.aplicacion, 'texto');
   const concl = decodificarSeccion(currentBosquejo?.conclusion, 'resumen');
 
+  // Paradas de la barra de progreso: TODO el mensaje en orden de lectura —
+  // Introducción, cada punto y subpunto (cualquier nivel), Aplicación, Conclusión.
+  const paradas = useMemo(() => {
+    const lista = [];
+    if (tieneTextoVisible(intro.gancho) || tieneTextoVisible(intro.conexion) || intro.notas?.trim()) {
+      lista.push({ id: 'intro', etiqueta: 'Introducción' });
+    }
+    recolectarPuntos(puntos, 0, lista);
+    if (tieneTextoVisible(aplic.texto) || aplic.notas?.trim()) {
+      lista.push({ id: 'aplicacion', etiqueta: 'Aplicación' });
+    }
+    if (tieneTextoVisible(concl.resumen) || tieneTextoVisible(concl.llamado) || concl.notas?.trim()) {
+      lista.push({ id: 'conclusion', etiqueta: 'Conclusión' });
+    }
+    return lista;
+  }, [currentBosquejo]);
+
+  // Estado de cada parada respecto a dónde vas leyendo — se usa tanto en
+  // la barra de progreso como para atenuar/resaltar el texto mismo.
+  const indicePorId = useMemo(
+    () => new Map(paradas.map((p, i) => [p.id, i])),
+    [paradas]
+  );
+  const estadoDe = useCallback(
+    (idParada) => {
+      if (paradas.length < 2) return 'normal';
+      const idx = indicePorId.get(idParada);
+      if (idx === undefined) return 'normal';
+      if (idParada === activo) return 'activo';
+      if (idx <= maxVisto) return 'visitado';
+      return 'normal';
+    },
+    [paradas, indicePorId, activo, maxVisto]
+  );
+
   useEffect(() => {
-    if (puntos.length === 0) return;
-    if (!activo) setActivo(puntos[0].id);
+    if (paradas.length === 0) return;
+    if (!activo) setActivo(paradas[0].id);
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -241,10 +303,18 @@ const VerBosquejo = () => {
 
     refsPuntos.current.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [puntos.length, currentBosquejo?.id]);
+  }, [paradas]);
 
-  const saltarAPunto = (idPunto) => {
-    const el = refsPuntos.current.get(idPunto);
+  // Recuerda hasta dónde has llegado — si te devuelves a repasar algo,
+  // lo ya cubierto se queda marcado (no retrocede).
+  useEffect(() => {
+    if (!activo) return;
+    const idx = paradas.findIndex((p) => p.id === activo);
+    if (idx > maxVisto) setMaxVisto(idx);
+  }, [activo, paradas]);
+
+  const saltarAParada = (idParada) => {
+    const el = refsPuntos.current.get(idParada);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -285,7 +355,7 @@ const VerBosquejo = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
 
-      <div className="max-w-3xl mx-auto p-4 sm:p-6" style={puntos.length > 1 ? { paddingBottom: '84px' } : undefined}>
+      <div className="max-w-3xl mx-auto p-4 sm:p-6" style={paradas.length > 1 ? { paddingBottom: '84px' } : undefined}>
         <div className="mb-6 flex items-center justify-between gap-3">
           <Link
             to="/bosquejos"
@@ -324,6 +394,7 @@ const VerBosquejo = () => {
           )}
 
           <SeccionCampos
+            id="intro"
             titulo="Introducción"
             campos={[
               { rotulo: 'Gancho', texto: intro.gancho },
@@ -331,6 +402,8 @@ const VerBosquejo = () => {
             ]}
             notas={intro.notas}
             abrirNota={(titulo, texto) => setNota({ titulo, texto })}
+            registrarRef={registrarRef}
+            estadoDe={estadoDe}
           />
 
           {puntos.length > 0 && (
@@ -346,19 +419,24 @@ const VerBosquejo = () => {
                   nivel={0}
                   registrarRef={registrarRef}
                   abrirNota={(titulo, texto) => setNota({ titulo, texto })}
+                  estadoDe={estadoDe}
                 />
               ))}
             </section>
           )}
 
           <SeccionCampos
+            id="aplicacion"
             titulo="Aplicación"
             campos={[{ rotulo: null, texto: aplic.texto }]}
             notas={aplic.notas}
             abrirNota={(titulo, texto) => setNota({ titulo, texto })}
+            registrarRef={registrarRef}
+            estadoDe={estadoDe}
           />
 
           <SeccionCampos
+            id="conclusion"
             titulo="Conclusión"
             campos={[
               { rotulo: 'Resumen', texto: concl.resumen },
@@ -366,6 +444,8 @@ const VerBosquejo = () => {
             ]}
             notas={concl.notas}
             abrirNota={(titulo, texto) => setNota({ titulo, texto })}
+            registrarRef={registrarRef}
+            estadoDe={estadoDe}
           />
 
           <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2 justify-between text-sm text-gray-500 dark:text-gray-400">
@@ -375,8 +455,8 @@ const VerBosquejo = () => {
         </article>
       </div>
 
-      {puntos.length > 1 && (
-        <BarraProgreso puntos={puntos} activo={activo} onSaltar={saltarAPunto} />
+      {paradas.length > 1 && (
+        <BarraProgreso paradas={paradas} activo={activo} maxVisto={maxVisto} onSaltar={saltarAParada} />
       )}
 
       {nota && (

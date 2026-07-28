@@ -694,3 +694,352 @@ textarea {
     padding: 3px 8px;
   }
 }
+
+/* ===== LECTOR BÍBLICO (Reader) ===== */
+.reader {
+  flex: 1;
+  padding: 20px 24px 40px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Navegación de capítulos */
+.chapter-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 12px 16px;
+  background: var(--surface, #f8f6f0);
+  border-radius: var(--radius, 8px);
+  border: 1px solid var(--border, #e0d8cc);
+  margin-bottom: 20px;
+}
+
+.chapter-nav-title {
+  font-family: var(--font-family-title, 'Caveat', cursive);
+  font-size: 1.1rem;
+  color: var(--text-color, #1e2b38);
+  margin-right: 12px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.cap-btn {
+  background: none;
+  border: 1px solid var(--border, #e0d8cc);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-family: var(--font-family, 'Lora', serif);
+  font-size: 0.8rem;
+  color: var(--text-muted, #7f8c8d);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.cap-btn:hover {
+  background: var(--primary-color, #8e44ad);
+  color: white;
+  border-color: var(--primary-color, #8e44ad);
+}
+
+.cap-btn.active {
+  background: var(--primary-color, #8e44ad);
+  color: white;
+  border-color: var(--primary-color, #8e44ad);
+  font-weight: 600;
+}
+
+/* Información del libro */
+.book-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 12px 16px;
+  background: var(--surface, #f8f6f0);
+  border-radius: var(--radius, 8px);
+  border: 1px solid var(--border, #e0d8cc);
+  margin-bottom: 20px;
+}
+
+.book-info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.book-info-label {
+  font-family: var(--font-family, 'Lora', serif);
+  font-size: 0.7rem;
+  color: var(--text-muted, #7f8c8d);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.book-info-val {
+  font-family: var(--font-family, 'Lora', serif);
+  font-size: 0.85rem;
+  color: var(--text-color, #1e2b38);
+  font-weight: 500;
+}
+
+/* Área de versículos */
+.verse-area {
+  padding: 8px 0 20px;
+}
+
+.verse-book-title {
+  font-family: var(--font-family-title, 'Caveat', cursive);
+  font-size: 2.2rem;
+  color: var(--primary-color, #8e44ad);
+  margin-bottom: 16px;
+  font-weight: 400;
+}
+
+.verse-chapter-label {
+  font-family: var(--font-family, 'Lora', serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-color, #1e2b38);
+  margin: 16px 0 12px;
+  border-bottom: 2px solid var(--border, #e0d8cc);
+  padding-bottom: 8px;
+}
+
+/* Versículo individual */
+.verse {
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background 0.15s;
+  cursor: default;
+  line-height: 1.7;
+  font-size: 1rem;
+  color: var(--text-color, #1e2b38);
+}
+
+.verse:hover {
+  background: var(--surface2, #f0ece4);
+}
+
+.verse.highlighted {
+  background: rgba(142, 68, 173, 0.08);
+  border-left: 3px solid var(--primary-color, #8e44ad);
+  padding-left: 9px;
+}
+
+.verse-num {
+  font-family: var(--font-family, 'Lora', serif);
+  font-size: 0.7rem;
+  color: var(--text-muted, #7f8c8d);
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.verse-text {
+  flex: 1;
+  font-family: var(--font-family, 'Lora', serif);
+}
+
+/* Stats bar */
+.stats-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 16px;
+  background: var(--bg-notebook, #fcf9f2);
+  border-top: 1px solid var(--border, #e0d8cc);
+  font-size: 0.8rem;
+  color: var(--text-muted, #7f8c8d);
+  z-index: 10;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-item span {
+  font-family: var(--font-family, 'Lora', serif);
+  opacity: 0.7;
+}
+
+.stat-item strong {
+  font-family: var(--font-family, 'Lora', serif);
+  color: var(--text-color, #1e2b38);
+  font-weight: 600;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border, #e0d8cc);
+}
+
+/* ===== SIDEBAR (para el lector) ===== */
+.sidebar {
+  padding: 12px 16px;
+  background: var(--surface, #f8f6f0);
+  border-right: 1px solid var(--border, #e0d8cc);
+  min-width: 200px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  margin-bottom: 12px;
+}
+
+.testamento-group {
+  border-bottom: 1px solid var(--border, #e0d8cc);
+  padding-bottom: 8px;
+}
+
+.testamento-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 4px;
+  font-family: var(--font-family, 'Lora', serif);
+  font-weight: 600;
+  color: var(--text-color, #1e2b38);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.testamento-header:hover {
+  background: var(--surface2, #f0ece4);
+}
+
+.testamento-header.open .testamento-chevron {
+  transform: rotate(90deg);
+}
+
+.testamento-chevron {
+  transition: transform 0.2s;
+  font-size: 0.7rem;
+  color: var(--text-muted, #7f8c8d);
+}
+
+.sidebar-label {
+  font-family: var(--font-family, 'Lora', serif);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #7f8c8d);
+  padding: 6px 4px 4px;
+}
+
+.libro-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  font-family: var(--font-family, 'Lora', serif);
+  font-size: 0.85rem;
+  color: var(--text-color, #1e2b38);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.libro-btn:hover {
+  background: var(--surface2, #f0ece4);
+}
+
+.libro-btn.active {
+  background: var(--primary-color, #8e44ad);
+  color: white;
+}
+
+.libro-abrev {
+  font-family: var(--font-family, 'Lora', serif);
+  font-weight: 600;
+  color: var(--primary-color, #8e44ad);
+  min-width: 28px;
+}
+
+.libro-btn.active .libro-abrev {
+  color: white;
+}
+
+/* ===== RESPONSIVE PARA LECTOR ===== */
+@media (max-width: 700px) {
+  .reader {
+    padding: 12px 16px 30px;
+  }
+  .chapter-nav {
+    padding: 8px 12px;
+    gap: 3px;
+  }
+  .chapter-nav-title {
+    font-size: 1rem;
+    margin-right: 8px;
+  }
+  .cap-btn {
+    font-size: 0.7rem;
+    padding: 3px 7px;
+  }
+  .book-info {
+    padding: 8px 12px;
+    gap: 6px 12px;
+  }
+  .book-info-item {
+    font-size: 0.75rem;
+  }
+  .verse {
+    font-size: 0.9rem;
+    padding: 6px 8px;
+  }
+  .verse-num {
+    min-width: 20px;
+    font-size: 0.6rem;
+  }
+  .verse-book-title {
+    font-size: 1.8rem;
+  }
+  .sidebar {
+    min-width: 0;
+    padding: 8px 10px;
+  }
+  .stats-bar {
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    gap: 4px 8px;
+  }
+  .stat-divider {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .reader {
+    padding: 8px 10px 20px;
+  }
+  .verse {
+    font-size: 0.85rem;
+    gap: 8px;
+  }
+  .verse-book-title {
+    font-size: 1.5rem;
+  }
+  .chapter-nav-title {
+    font-size: 0.9rem;
+  }
+  .cap-btn {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+  }
+}

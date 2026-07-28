@@ -23,6 +23,8 @@ model Bosquejo {
   id           String   @id @default(cuid())
   titulo       String
   cita         String?
+  tema         String?
+  proposito    String?
   introduccion String?
   aplicacion   String?
   conclusion   String?

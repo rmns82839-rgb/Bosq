@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useBosquejoStore } from '../stores/bosquejoStore';
 import BosquejoEditor from '../components/bosquejos/BosquejoEditor';
+import { codificarSeccion } from '../lib/bosquejoSecciones';
 
 const NuevoBosquejo = () => {
   const navigate = useNavigate();
@@ -12,10 +13,12 @@ const NuevoBosquejo = () => {
   const [datos, setDatos] = useState({
     titulo: '',
     cita: '',
-    introduccion: '',
+    tema: '',
+    proposito: '',
+    introduccion: { gancho: '', conexion: '', notas: '' },
     puntos: [],
-    aplicacion: '',
-    conclusion: '',
+    aplicacion: { texto: '', notas: '' },
+    conclusion: { resumen: '', llamado: '', notas: '' },
   });
 
   const handleGuardar = async () => {
@@ -25,7 +28,13 @@ const NuevoBosquejo = () => {
     }
     setGuardando(true);
     try {
-      const resultado = await createBosquejo(datos);
+      const payload = {
+        ...datos,
+        introduccion: codificarSeccion(datos.introduccion),
+        aplicacion: codificarSeccion(datos.aplicacion),
+        conclusion: codificarSeccion(datos.conclusion),
+      };
+      const resultado = await createBosquejo(payload);
       toast.success('Bosquejo guardado');
       navigate(`/bosquejos/${resultado.id}`);
     } catch {

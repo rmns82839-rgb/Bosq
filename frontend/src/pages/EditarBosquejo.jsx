@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { useBosquejoStore } from '../stores/bosquejoStore';
 import BosquejoEditor from '../components/bosquejos/BosquejoEditor';
+import { decodificarSeccion, codificarSeccion } from '../lib/bosquejoSecciones';
 
 const EditarBosquejo = () => {
   const { id } = useParams();
@@ -30,10 +31,12 @@ const EditarBosquejo = () => {
           setDatos({
             titulo: b.titulo || '',
             cita: b.cita || '',
-            introduccion: b.introduccion || '',
+            tema: b.tema || '',
+            proposito: b.proposito || '',
+            introduccion: decodificarSeccion(b.introduccion, 'gancho'),
             puntos: b.puntos || [],
-            aplicacion: b.aplicacion || '',
-            conclusion: b.conclusion || '',
+            aplicacion: decodificarSeccion(b.aplicacion, 'texto'),
+            conclusion: decodificarSeccion(b.conclusion, 'resumen'),
           });
         }
         setCargando(false);
@@ -53,7 +56,13 @@ const EditarBosquejo = () => {
     }
     setGuardando(true);
     try {
-      await updateBosquejo(id, datos);
+      const payload = {
+        ...datos,
+        introduccion: codificarSeccion(datos.introduccion),
+        aplicacion: codificarSeccion(datos.aplicacion),
+        conclusion: codificarSeccion(datos.conclusion),
+      };
+      await updateBosquejo(id, payload);
       toast.success('Cambios guardados');
       navigate(`/bosquejos/${id}`);
     } catch {

@@ -48,7 +48,7 @@
   background-position: var(--notebook-bg-position);
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  padding: 20px 20px 20px 44px;   /* 44px = espacio del margen rojo */
+  padding: 20px 20px 20px 44px;
   margin-bottom: 18px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
@@ -58,7 +58,6 @@
   padding-bottom: 26px;
 }
 
-/* Rótulo de sección: manuscrito, discreto */
 .be-rotulo {
   font-family: var(--font-family-title);
   font-size: 1.4rem;
@@ -86,7 +85,7 @@
 .be-textarea {
   resize: none;
   overflow: hidden;
-  line-height: 28px;   /* cuadra con el rayado del papel */
+  line-height: 28px;
 }
 
 .be-input:focus,
@@ -117,6 +116,31 @@
 
 .be-cita { flex: 1 1 260px; font-size: 0.95rem; }
 
+.be-tema-fila {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.be-tema, .be-proposito {
+  flex: 1 1 220px;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.be-subcampo { margin-bottom: 10px; }
+
+.be-subrotulo {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
 /* ── Puntos ─────────────────────────────────────────────────── */
 .be-lista { display: flex; flex-direction: column; gap: 12px; }
 .be-lista-1, .be-lista-2 { margin-top: 12px; }
@@ -134,7 +158,6 @@
 
 .be-punto-fila { display: flex; gap: 10px; align-items: flex-start; }
 
-/* El marcador homilético (I / A / 1) vive en el margen */
 .be-marcador {
   font-family: var(--font-family-title);
   font-size: 1.25rem;
@@ -163,7 +186,6 @@
 
 .be-desarrollo { font-size: 0.95rem; }
 
-/* Indentación por nivel */
 .be-lista-1 { padding-left: 20px; }
 .be-lista-2 { padding-left: 18px; }
 
@@ -187,6 +209,27 @@
   text-decoration-style: dotted;
   text-underline-offset: 2px;
 }
+
+/* ── Nota (editor) ─────────────────────────────────────────────
+   Mismo espíritu que "abrir ↗" de los versículos: un enlace
+   discreto que abre el modal de la nota. */
+.be-notas-bloque { margin-top: 6px; }
+
+.nota-enlace {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 3px 0;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+
+.nota-enlace:hover { color: var(--primary-color); }
 
 /* ── Botones ────────────────────────────────────────────────── */
 .be-btn {
@@ -214,7 +257,6 @@
 }
 .be-btn-plano:hover { color: var(--text-color); }
 
-/* Íconos pequeños: solo se revelan al enfocar/pasar el ratón */
 .be-icono,
 .be-agarre {
   background: none;
@@ -263,7 +305,7 @@
 
 .be-agregar-principal { display: block; width: 100%; margin-top: 16px; padding: 12px; }
 
-/* ── Barra fija ─────────────────────────────────────────────── */
+/* ── Barra fija de guardar (editor) ───────────────────────────── */
 .be-barra {
   position: sticky;
   bottom: 0;
@@ -280,7 +322,7 @@
 
 .be-barra-info { font-size: 0.82rem; color: var(--text-muted); }
 
-/* ── Accesibilidad y móvil ──────────────────────────────────── */
+/* ── Accesibilidad y móvil (editor) ──────────────────────────── */
 .be-input:focus-visible,
 .be-textarea:focus-visible,
 .be-btn:focus-visible,
@@ -298,23 +340,197 @@
 
 @media (max-width: 640px) {
   .be-hoja { padding: 0 10px 120px; }
-
   .be-seccion { padding: 16px 14px 16px 32px; }
-
   .be-encabezado { padding: 16px 0 12px; }
   .be-encabezado-titulo { font-size: 1.6rem; }
-
-  /* En móvil los controles quedan siempre visibles: no hay hover */
   .be-icono, .be-agarre { opacity: 0.75; padding: 8px; }
-
   .be-marcador { font-size: 1.1rem; min-width: 1.8ch; }
-
   .be-lista-1 { padding-left: 12px; }
   .be-lista-2 { padding-left: 10px; }
-
   .be-titulo-principal { font-size: 1.55rem; }
-
-  /* Botones del encabezado a lo ancho, parejos */
   .be-encabezado-acciones { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .be-encabezado-acciones .be-btn { width: 100%; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   VerBosquejo — modal de nota + barra de progreso
+   Prefijo vb- para no chocar con las clases be- del editor.
+   Usa los mismos tokens de --primary-color / --border-color.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Modal de nota ─────────────────────────────────────────── */
+.vb-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 60;
+}
+
+.vb-modal-caja {
+  background: var(--bg-notebook, #fff);
+  border-radius: 8px;
+  max-width: 480px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  padding: 20px 22px;
+}
+
+.vb-modal-encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.vb-modal-titulo {
+  font-family: var(--font-family-title, serif);
+  font-size: 1.15rem;
+  color: var(--primary-color, #8e44ad);
+  margin: 0;
+}
+
+.vb-modal-cerrar {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #888);
+  padding: 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.vb-modal-cerrar:hover {
+  color: var(--text-color, #333);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.vb-modal-texto {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: var(--text-color, #333);
+  font-style: italic;
+}
+
+/* ── Barra de progreso ────────────────────────────────────── */
+.vb-progreso-envoltura {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--bg-wrapper, #f9fafb);
+  border-top: 1px solid var(--border-color, #e5e7eb);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
+  padding: 8px 16px 10px;
+}
+.dark .vb-progreso-envoltura { background: #1f2937; }
+
+.vb-progreso-segmentos {
+  display: flex;
+  gap: 4px;
+  max-width: 768px;
+  margin: 0 auto;
+}
+
+.vb-progreso-segmento {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-color, #e5e7eb);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s;
+}
+
+.vb-progreso-segmento:hover { background: var(--primary-light, #a569bd); }
+
+.vb-progreso-activo {
+  background: var(--primary-color, #8e44ad);
+}
+
+.vb-progreso-etiqueta {
+  max-width: 768px;
+  margin: 6px auto 0;
+  font-size: 0.78rem;
+  color: var(--text-muted, #888);
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .vb-modal-caja { padding: 16px 18px; }
+  .vb-progreso-envoltura { padding: 6px 10px 4px; }
+  .vb-progreso-etiqueta { font-size: 0.72rem; }
+}
+
+/* ── Nota incrustada en el texto (VerBosquejo) ─────────────────
+   El ícono que reemplaza el marcador ⟦...⟧ dentro de un párrafo. */
+.nota-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(142, 68, 173, 0.12);
+  border: none;
+  border-radius: 50%;
+  width: 1.5em;
+  height: 1.5em;
+  font-size: 0.85em;
+  line-height: 1;
+  cursor: pointer;
+  margin: 0 2px;
+  vertical-align: middle;
+  transition: background 0.15s;
+}
+.nota-inline:hover { background: rgba(142, 68, 173, 0.25); }
+
+/* ── Campo con botón de insertar nota (editor) ─────────────────── */
+.be-campo-notas { display: flex; flex-direction: column; }
+
+.be-btn-insertar-nota {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 3px 0;
+  margin-top: -2px;
+  transition: color 0.15s;
+}
+.be-btn-insertar-nota:hover { color: var(--primary-color); }
+
+/* ── Botones de orden manual (▲▼) ──────────────────────────────── */
+.be-orden-botones {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.be-orden-botones .be-icono {
+  font-size: 0.7rem;
+  padding: 1px 5px;
+  opacity: 0.6;
+}
+.be-orden-botones .be-icono:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+}
+.be-punto:hover .be-orden-botones .be-icono:not(:disabled) { opacity: 1; }
+
+.be-punto-acciones-pie {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
 }

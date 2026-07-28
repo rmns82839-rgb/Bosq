@@ -1,20 +1,14 @@
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import {
-  DndContext, closestCenter, PointerSensor, KeyboardSensor,
-  useSensor, useSensors,
-} from '@dnd-kit/core';
-import {
-  SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy,
-  useSortable, arrayMove,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import React, { useState, useCallback, useMemo } from 'react';
 import { VersiculoLink } from '../../lib/bibliaLink';
+import NotaBoton from './NotaBoton';
+import CampoTexto from './CampoTexto';
 import '../../styles/bosquejo-editor.css';
 
 /* ═══════════════════════════════════════════════════════════════
    NOTACIÓN HOMILÉTICA
    Nivel 0 → I, II, III   |   Nivel 1 → A, B, C   |   Nivel 2 → 1, 2, 3
-   La numeración no decora: muestra la jerarquía real del bosquejo.
+   La numeración no decora: se recalcula sola según el orden real,
+   así que insertar o mover un punto reorganiza todo automáticamente.
    ═══════════════════════════════════════════════════════════════ */
 const ROMANOS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
                  'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
@@ -32,13 +26,18 @@ const nuevoPunto = () => ({
   titulo: '',
   descripcion: '',
   versos: '',
+  notas: '',
   subpuntos: [],
 });
 
-/* ── Utilidades de árbol (inmutables, por ruta) ───────────────── */
-const getEn = (puntos, ruta) =>
-  ruta.reduce((acc, i) => acc?.[i]?.subpuntos ?? acc?.[i], puntos);
+const arrayMove = (lista, desde, hasta) => {
+  const copia = [...lista];
+  const [item] = copia.splice(desde, 1);
+  copia.splice(hasta, 0, item);
+  return copia;
+};
 
+/* ── Utilidades de árbol (inmutables, por ruta) ───────────────── */
 function mapEnRuta(puntos, ruta, fn) {
   if (ruta.length === 0) return fn(puntos);
   const [i, ...resto] = ruta;
@@ -58,87 +57,89 @@ function actualizarPunto(puntos, ruta, campo, valor) {
 const agregarPunto = (puntos, rutaPadre) =>
   mapEnRuta(puntos, rutaPadre, (lista) => [...lista, nuevoPunto()]);
 
+function insertarAntes(puntos, ruta) {
+  const padre = ruta.slice(0, -1);
+  const i = ruta[ruta.length - 1];
+  return mapEnRuta(puntos, padre, (lista) => {
+    const nueva = [...lista];
+    nueva.splice(i, 0, nuevoPunto());
+    return nueva;
+  });
+}
+
 function eliminarPunto(puntos, ruta) {
   const padre = ruta.slice(0, -1);
   const i = ruta[ruta.length - 1];
   return mapEnRuta(puntos, padre, (lista) => lista.filter((_, idx) => idx !== i));
 }
 
-const reordenar = (puntos, rutaPadre, desde, hasta) =>
-  mapEnRuta(puntos, rutaPadre, (lista) => arrayMove(lista, desde, hasta));
+function moverArriba(puntos, ruta) {
+  const padre = ruta.slice(0, -1);
+  const i = ruta[ruta.length - 1];
+  if (i === 0) return puntos;
+  return mapEnRuta(puntos, padre, (lista) => arrayMove(lista, i, i - 1));
+}
 
-/** Normaliza datos viejos: puntos planos sin id ni subpuntos. */
+function moverAbajo(puntos, ruta) {
+  const padre = ruta.slice(0, -1);
+  const i = ruta[ruta.length - 1];
+  return mapEnRuta(puntos, padre, (lista) =>
+    i >= lista.length - 1 ? lista : arrayMove(lista, i, i + 1)
+  );
+}
+
+/** Normaliza datos viejos: puntos planos sin id, sin subpuntos. */
 function normalizar(puntos) {
   if (!Array.isArray(puntos) || puntos.length === 0) return [nuevoPunto()];
   return puntos.map((p) => ({
     id: p.id || `p_${Math.random().toString(36).slice(2, 9)}`,
     titulo: p.titulo || '',
-    // tolera el campo viejo `desarrollo`
     descripcion: p.descripcion ?? p.desarrollo ?? '',
     versos: p.versos || '',
+    notas: p.notas || '',
     subpuntos: normalizarHijos(p.subpuntos),
   }));
 }
 const normalizarHijos = (subs) =>
   !Array.isArray(subs) || subs.length === 0 ? [] : normalizar(subs);
 
-/* ── Textarea que crece con el contenido ─────────────────────── */
-function AutoTextarea({ value, onChange, className = '', minRows = 1, ...props }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  }, [value]);
-  return (
-    <textarea
-      ref={ref}
-      rows={minRows}
-      value={value}
-      onChange={onChange}
-      className={`be-textarea ${className}`}
-      {...props}
-    />
-  );
-}
-
 /* ── Un punto (recursivo) ────────────────────────────────────── */
-function Punto({ punto, indice, nivel, ruta, acciones, plegados, togglePlegado }) {
-  const {
-    attributes, listeners, setNodeRef, transform, transition, isDragging,
-  } = useSortable({ id: punto.id });
-
-  const estilo = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.45 : 1,
-  };
-
+function Punto({ punto, indice, total, nivel, ruta, acciones, plegados, togglePlegado }) {
   const subs = punto.subpuntos || [];
   const plegado = plegados.has(punto.id);
   const puedeAnidar = nivel < MAX_NIVEL;
 
   return (
-    <div ref={setNodeRef} style={estilo} className={`be-punto be-nivel-${nivel}`}>
+    <div className={`be-punto be-nivel-${nivel}`}>
       <div className="be-punto-fila">
-        {/* Marcador homilético en el margen */}
         <span className="be-marcador" aria-hidden="true">
           {marcador(nivel, indice)}.
         </span>
 
         <div className="be-punto-cuerpo">
           <div className="be-punto-encabezado">
-            <button
-              type="button"
-              className="be-agarre"
-              title="Arrastra para reordenar"
-              aria-label={`Reordenar punto ${marcador(nivel, indice)}`}
-              {...attributes}
-              {...listeners}
-            >
-              ⠿
-            </button>
+            <div className="be-orden-botones">
+              <button
+                type="button"
+                className="be-icono"
+                onClick={() => acciones.moverArriba(ruta)}
+                disabled={indice === 0}
+                title="Mover arriba"
+                aria-label="Mover este punto arriba"
+              >
+                ▲
+              </button>
+              <button
+                type="button"
+                className="be-icono"
+                onClick={() => acciones.moverAbajo(ruta)}
+                disabled={indice === total - 1}
+                title="Mover abajo"
+                aria-label="Mover este punto abajo"
+              >
+                ▼
+              </button>
+            </div>
 
             <input
               className="be-input be-titulo-punto"
@@ -170,11 +171,10 @@ function Punto({ punto, indice, nivel, ruta, acciones, plegados, togglePlegado }
             </button>
           </div>
 
-          <AutoTextarea
-            className="be-desarrollo"
+          <CampoTexto
             placeholder="Desarrollo del punto…"
             value={punto.descripcion}
-            onChange={(e) => acciones.editar(ruta, 'descripcion', e.target.value)}
+            onChange={(valor) => acciones.editar(ruta, 'descripcion', valor)}
           />
 
           <div className="be-versos-fila">
@@ -192,19 +192,34 @@ function Punto({ punto, indice, nivel, ruta, acciones, plegados, togglePlegado }
             )}
           </div>
 
-          {puedeAnidar && (
+          <div className="be-notas-bloque">
+            <NotaBoton
+              nota={punto.notas}
+              onChange={(texto) => acciones.editar(ruta, 'notas', texto)}
+            />
+          </div>
+
+          <div className="be-punto-acciones-pie">
             <button
               type="button"
               className="be-agregar-sub"
-              onClick={() => acciones.agregar(ruta)}
+              onClick={() => acciones.insertarAntes(ruta)}
             >
-              + Subpunto
+              + Insertar antes
             </button>
-          )}
+            {puedeAnidar && (
+              <button
+                type="button"
+                className="be-agregar-sub"
+                onClick={() => acciones.agregar(ruta)}
+              >
+                + Subpunto
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Subpuntos */}
       {!plegado && subs.length > 0 && (
         <ListaPuntos
           puntos={subs}
@@ -219,39 +234,24 @@ function Punto({ punto, indice, nivel, ruta, acciones, plegados, togglePlegado }
   );
 }
 
-/* ── Lista ordenable de puntos de un mismo nivel ─────────────── */
+/* ── Lista de puntos de un mismo nivel (sin arrastre) ─────────── */
 function ListaPuntos({ puntos, nivel, rutaPadre, acciones, plegados, togglePlegado }) {
-  const sensores = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  const handleDragEnd = ({ active, over }) => {
-    if (!over || active.id === over.id) return;
-    const desde = puntos.findIndex((p) => p.id === active.id);
-    const hasta = puntos.findIndex((p) => p.id === over.id);
-    if (desde !== -1 && hasta !== -1) acciones.mover(rutaPadre, desde, hasta);
-  };
-
   return (
-    <DndContext sensors={sensores} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={puntos.map((p) => p.id)} strategy={verticalListSortingStrategy}>
-        <div className={`be-lista be-lista-${nivel}`}>
-          {puntos.map((p, i) => (
-            <Punto
-              key={p.id}
-              punto={p}
-              indice={i}
-              nivel={nivel}
-              ruta={[...rutaPadre, i]}
-              acciones={acciones}
-              plegados={plegados}
-              togglePlegado={togglePlegado}
-            />
-          ))}
-        </div>
-      </SortableContext>
-    </DndContext>
+    <div className={`be-lista be-lista-${nivel}`}>
+      {puntos.map((p, i) => (
+        <Punto
+          key={p.id}
+          punto={p}
+          indice={i}
+          total={puntos.length}
+          nivel={nivel}
+          ruta={[...rutaPadre, i]}
+          acciones={acciones}
+          plegados={plegados}
+          togglePlegado={togglePlegado}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -275,6 +275,12 @@ export default function BosquejoEditor({
     [datos, onChange]
   );
 
+  const setSeccion = useCallback(
+    (seccion, campo, valor) =>
+      onChange({ ...datos, [seccion]: { ...(datos[seccion] || {}), [campo]: valor } }),
+    [datos, onChange]
+  );
+
   const setPuntos = useCallback(
     (nuevos) => onChange({ ...datos, puntos: nuevos }),
     [datos, onChange]
@@ -284,8 +290,10 @@ export default function BosquejoEditor({
     () => ({
       editar: (ruta, campo, valor) => setPuntos(actualizarPunto(puntos, ruta, campo, valor)),
       agregar: (rutaPadre) => setPuntos(agregarPunto(puntos, rutaPadre)),
+      insertarAntes: (ruta) => setPuntos(insertarAntes(puntos, ruta)),
       eliminar: (ruta) => setPuntos(eliminarPunto(puntos, ruta)),
-      mover: (rutaPadre, desde, hasta) => setPuntos(reordenar(puntos, rutaPadre, desde, hasta)),
+      moverArriba: (ruta) => setPuntos(moverArriba(puntos, ruta)),
+      moverAbajo: (ruta) => setPuntos(moverAbajo(puntos, ruta)),
     }),
     [puntos, setPuntos]
   );
@@ -298,7 +306,6 @@ export default function BosquejoEditor({
     });
   }, []);
 
-  // Conteo para el pie: cuántos puntos en total (todos los niveles)
   const totalPuntos = useMemo(() => {
     const contar = (lista) =>
       lista.reduce((n, p) => n + 1 + contar(p.subpuntos || []), 0);
@@ -309,12 +316,11 @@ export default function BosquejoEditor({
 
   return (
     <div className="be-hoja">
-      {/* ── Encabezado ── */}
       <header className="be-encabezado">
         <div className="be-encabezado-texto">
           <h1 className="be-encabezado-titulo">{titulo}</h1>
           <p className="be-encabezado-nota">
-            Todo en una sola hoja. Arrastra ⠿ para reordenar.
+            Todo en una sola hoja. Usa ▲▼ para reordenar.
           </p>
         </div>
         <div className="be-encabezado-acciones">
@@ -335,7 +341,6 @@ export default function BosquejoEditor({
         </div>
       </header>
 
-      {/* ── Título y cita ── */}
       <section className="be-seccion be-seccion-titulo">
         <input
           className="be-input be-titulo-principal"
@@ -357,20 +362,48 @@ export default function BosquejoEditor({
             </VersiculoLink>
           )}
         </div>
+        <div className="be-tema-fila">
+          <input
+            className="be-input be-tema"
+            placeholder="Tema (opcional)"
+            value={datos.tema || ''}
+            onChange={(e) => setCampo('tema', e.target.value)}
+          />
+          <input
+            className="be-input be-proposito"
+            placeholder="Propósito (opcional) — ej: Evangelístico, Edificativo…"
+            value={datos.proposito || ''}
+            onChange={(e) => setCampo('proposito', e.target.value)}
+          />
+        </div>
       </section>
 
-      {/* ── Introducción ── */}
       <section className="be-seccion">
         <h2 className="be-rotulo">Introducción</h2>
-        <AutoTextarea
-          minRows={3}
-          placeholder="Cómo entras al tema…"
-          value={datos.introduccion || ''}
-          onChange={(e) => setCampo('introduccion', e.target.value)}
+        <div className="be-subcampo">
+          <label className="be-subrotulo">Gancho</label>
+          <CampoTexto
+            minRows={2}
+            placeholder="Cómo captas la atención al empezar… (opcional)"
+            value={datos.introduccion?.gancho || ''}
+            onChange={(valor) => setSeccion('introduccion', 'gancho', valor)}
+          />
+        </div>
+        <div className="be-subcampo">
+          <label className="be-subrotulo">Conexión</label>
+          <CampoTexto
+            minRows={2}
+            placeholder="Cómo conectas el gancho con el tema… (opcional)"
+            value={datos.introduccion?.conexion || ''}
+            onChange={(valor) => setSeccion('introduccion', 'conexion', valor)}
+          />
+        </div>
+        <NotaBoton
+          nota={datos.introduccion?.notas}
+          onChange={(texto) => setSeccion('introduccion', 'notas', texto)}
         />
       </section>
 
-      {/* ── Desarrollo ── */}
       <section className="be-seccion">
         <h2 className="be-rotulo">Desarrollo</h2>
         <ListaPuntos
@@ -390,29 +423,46 @@ export default function BosquejoEditor({
         </button>
       </section>
 
-      {/* ── Aplicación ── */}
       <section className="be-seccion">
         <h2 className="be-rotulo">Aplicación</h2>
-        <AutoTextarea
+        <CampoTexto
           minRows={3}
-          placeholder="Qué hace el oyente con esto…"
-          value={datos.aplicacion || ''}
-          onChange={(e) => setCampo('aplicacion', e.target.value)}
+          placeholder="Qué hace el oyente con esto… (opcional)"
+          value={datos.aplicacion?.texto || ''}
+          onChange={(valor) => setSeccion('aplicacion', 'texto', valor)}
+        />
+        <NotaBoton
+          nota={datos.aplicacion?.notas}
+          onChange={(texto) => setSeccion('aplicacion', 'notas', texto)}
         />
       </section>
 
-      {/* ── Conclusión ── */}
       <section className="be-seccion">
         <h2 className="be-rotulo">Conclusión</h2>
-        <AutoTextarea
-          minRows={3}
-          placeholder="Cómo cierras…"
-          value={datos.conclusion || ''}
-          onChange={(e) => setCampo('conclusion', e.target.value)}
+        <div className="be-subcampo">
+          <label className="be-subrotulo">Resumen</label>
+          <CampoTexto
+            minRows={2}
+            placeholder="Cómo cierras el mensaje… (opcional)"
+            value={datos.conclusion?.resumen || ''}
+            onChange={(valor) => setSeccion('conclusion', 'resumen', valor)}
+          />
+        </div>
+        <div className="be-subcampo">
+          <label className="be-subrotulo">Llamado</label>
+          <CampoTexto
+            minRows={2}
+            placeholder="Qué le pides al oyente que haga… (opcional)"
+            value={datos.conclusion?.llamado || ''}
+            onChange={(valor) => setSeccion('conclusion', 'llamado', valor)}
+          />
+        </div>
+        <NotaBoton
+          nota={datos.conclusion?.notas}
+          onChange={(texto) => setSeccion('conclusion', 'notas', texto)}
         />
       </section>
 
-      {/* ── Barra fija de guardado ── */}
       <div className="be-barra">
         <span className="be-barra-info">
           {totalPuntos} {totalPuntos === 1 ? 'punto' : 'puntos'}

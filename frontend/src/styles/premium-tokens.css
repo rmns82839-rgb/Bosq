@@ -1,0 +1,87 @@
+/* ═══════════════════════════════════════════════════════════════
+   TOKENS PREMIUM COMPARTIDOS
+   Pergamino + tinta + morado litúrgico + latón envejecido.
+   Se aplican en dos pantallas — VerBosquejo (.vb-premium) y el
+   Editor (.be-premium) — con la MISMA paleta, para que pasar de
+   leer a editar se sienta como el mismo objeto físico.
+
+   Truco: además de las variables "reales" (--pergamino, --tinta…),
+   definimos ALIAS con los nombres genéricos que el CSS del editor
+   ya usaba (--primary-color, --bg-notebook, --border-color…). Así
+   la mayoría de bosquejo-editor.css se retoña solo, sin reescribir
+   cada regla — solo hace falta agregar lo puntual (tipografía mono,
+   etc.) en cada hoja de estilos específica.
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:where(.vb-premium, .be-premium) {
+  /* Paleta real */
+  --tinta: #1c1a17;
+  --tinta-suave: #4a443c;
+  --pergamino: #f7f1e3;
+  --pergamino-sombra: #ece3cc;
+  --purpura: #5b3a6e;
+  --purpura-suave: #7a5a8e;
+  --laton: #a8823c;
+  --laton-suave: #c9a568;
+  --cuero: #6b4a3a;
+  --cuero-borde: rgba(107, 74, 58, 0.22);
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Tinta por rol — como un manuscrito rubricado, donde cada tipo de
+     contenido llevaba su propio color: rúbricas, iniciales, glosas… */
+  --tinta-intro: #8a4a3a;       /* rúbrica terracota — Introducción */
+  --tinta-punto0: #5b3a6e;      /* morado litúrgico — puntos principales (I, II…) */
+  --tinta-punto1: #2f6b5e;      /* verde bosque — subpuntos (A, B…) */
+  --tinta-punto2: #3a5a7a;      /* azul tintero — sub-subpuntos (1, 2…) */
+  --tinta-aplicacion: #5a7a3a;  /* verde oliva — Aplicación */
+  --tinta-conclusion: #a8823c;  /* latón/oro — Conclusión, como un sello de cierre */
+
+  /* Alias hacia los nombres genéricos que ya usa el CSS existente */
+  --bg-notebook: var(--pergamino);
+  --bg-wrapper: var(--pergamino);
+  --border-color: var(--cuero-borde);
+  --primary-color: var(--purpura);
+  --primary-light: var(--purpura-suave);
+  --primary-dark: #432a52;
+  --text-color: var(--tinta);
+  --text-muted: var(--cuero);
+  --font-family-title: 'Lora', serif;
+  --input-focus: var(--purpura);
+  /* Sin rayado de cuaderno — página de pergamino lisa */
+  --notebook-bg-image: none;
+
+  background: var(--pergamino);
+  color: var(--tinta);
+  min-height: 100vh;
+}
+
+:where(.vb-premium.dark, .dark .vb-premium, .be-premium.dark, .dark .be-premium) {
+  --tinta: #ece3cc;
+  --tinta-suave: #c9bfa8;
+  --pergamino: #211d1a;
+  --pergamino-sombra: #2b2621;
+  --purpura-suave: #9b7bab;
+  --laton-suave: #d4b47c;
+  --cuero-borde: rgba(201, 165, 104, 0.18);
+  --text-muted: var(--laton-suave);
+
+  --tinta-intro: #c08064;
+  --tinta-punto0: #9b7bab;
+  --tinta-punto1: #6ba895;
+  --tinta-punto2: #7a9dbf;
+  --tinta-aplicacion: #9db56f;
+  --tinta-conclusion: #d4b47c;
+}
+
+/* Clases de rol — comparten --rol-color, usables tanto en el editor
+   como en VerBosquejo. Cualquier CSS que lea var(--rol-color) dentro
+   de un elemento con una de estas clases (o descendiente de él)
+   toma el color correcto automáticamente. */
+.rol-intro       { --rol-color: var(--tinta-intro); }
+.rol-punto0      { --rol-color: var(--tinta-punto0); }
+.rol-punto1      { --rol-color: var(--tinta-punto1); }
+.rol-punto2      { --rol-color: var(--tinta-punto2); }
+.rol-aplicacion  { --rol-color: var(--tinta-aplicacion); }
+.rol-conclusion  { --rol-color: var(--tinta-conclusion); }

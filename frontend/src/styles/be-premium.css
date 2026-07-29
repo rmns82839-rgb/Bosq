@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════════════════════════════
+   EDITOR — DIRECCIÓN PREMIUM (misma paleta que VerBosquejo)
+   La mayoría de bosquejo-editor.css ya se retiñe sola gracias a los
+   alias en premium-tokens.css (--primary-color, --bg-notebook,
+   --border-color…). Aquí solo va lo que ese CSS genérico no cubre:
+   el fondo de página, la tipografía mono en etiquetas de margen, y
+   un par de ajustes finos.
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('./premium-tokens.css');
+
+.be-premium {
+  background: var(--pergamino);
+  color: var(--tinta);
+  min-height: 100vh;
+}
+
+/* Etiquetas "de margen" — mono, como en VerBosquejo */
+.be-premium .be-subrotulo,
+.be-premium .be-versos-etiqueta,
+.be-premium .nota-enlace,
+.be-premium .be-btn-insertar-nota,
+.be-premium .be-barra-info,
+.be-premium .be-encabezado-nota {
+  font-family: var(--font-mono);
+}
+
+.be-premium .be-tema,
+.be-premium .be-proposito {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+/* La tarjeta/sección: sombra cálida en vez de la genérica gris */
+.be-premium .be-seccion {
+  box-shadow:
+    0 1px 2px rgba(28, 26, 23, 0.06),
+    0 6px 18px rgba(28, 26, 23, 0.08);
+}
+
+.be-premium .be-encabezado-titulo {
+  color: var(--purpura);
+}
+
+/* La barra fija de guardar, a tono con el pergamino */
+.be-premium .be-barra {
+  background: var(--pergamino);
+  border-top-color: var(--cuero-borde);
+}
+
+/* ── Colores por rol — la misma tinta que en el bosquejo final ─── */
+.be-premium .be-marcador { color: var(--rol-color, var(--primary-color)); }
+.be-premium .be-seccion[class*="rol-"] .be-rotulo { color: var(--rol-color, var(--primary-color)); }
+
+.be-premium .be-punto[class*="rol-"] {
+  border-left: 2px solid color-mix(in srgb, var(--rol-color) 35%, transparent);
+  padding-left: 8px;
+  margin-left: -10px;
+  border-radius: 0 4px 4px 0;
+}
+
+.be-premium .be-seccion[class*="rol-"] {
+  border-left: 3px solid color-mix(in srgb, var(--rol-color) 45%, transparent);
+}

@@ -1,0 +1,216 @@
+/* ═══════════════════════════════════════════════════════════════
+   VERBOSQUEJO — DIRECCIÓN PREMIUM (piloto, aislado en .vb-premium)
+   ───────────────────────────────────────────────────────────────
+   Paleta: pergamino + tinta + morado litúrgico + latón envejecido.
+   No es "cream + serif + morado" genérico: el morado es el color
+   litúrgico de Cuaresma/Adviento (penitencia y anticipación — el
+   mismo espíritu de estudio y preparación de un sermón), y el
+   latón referencia los broches de una Biblia de tapa dura.
+
+   Tipografía: Lora (ya usada) para títulos y cuerpo del mensaje;
+   una monoespaciada (JetBrains Mono) para todo lo que sea etiqueta,
+   fecha o marcador — como las anotaciones a mano en el margen de
+   una Biblia de estudio.
+
+   Firma: el indicador de progreso ya no es una barra segmentada
+   genérica — es un listón de marcapáginas que se desliza sobre una
+   pista, como el listón de tela de una Biblia de tapa dura.
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('./premium-tokens.css');
+
+.vb-premium {
+  background: var(--pergamino);
+  color: var(--tinta);
+  min-height: 100vh;
+}
+
+/* ── Etiqueta "de margen": mono, mayúsculas, discreta ─────────── */
+.vb-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cuero);
+}
+.dark .vb-eyebrow { color: var(--laton-suave); }
+
+/* ── La tarjeta del bosquejo: página de pergamino, no "card" SaaS ── */
+.vb-tarjeta {
+  background: var(--pergamino);
+  border: 1px solid var(--cuero-borde);
+  border-radius: 6px;
+  box-shadow:
+    0 1px 2px rgba(28, 26, 23, 0.06),
+    0 8px 24px rgba(28, 26, 23, 0.10);
+  padding: 28px 24px;
+}
+@media (min-width: 640px) { .vb-tarjeta { padding: 40px 44px; } }
+
+.vb-titulo {
+  font-size: 1.7rem;
+  line-height: 1.2;
+  color: var(--tinta);
+  margin-bottom: 4px;
+}
+@media (min-width: 640px) { .vb-titulo { font-size: 2.1rem; } }
+
+.vb-cita {
+  color: var(--purpura);
+  font-weight: 500;
+}
+.dark .vb-cita { color: var(--purpura-suave); }
+
+/* Marcador homilético (I / A / 1): toma el color de la tinta de su rol */
+.vb-marcador {
+  font-family: var(--font-family-title, 'Lora', serif);
+  color: var(--rol-color, var(--purpura));
+  min-width: 2.1ch;
+  text-align: right;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.vb-rotulo-seccion {
+  font-family: 'Lora', serif;
+  color: var(--rol-color, var(--tinta));
+}
+
+.vb-rotulo-campo { font-family: var(--font-mono); }
+
+.vb-texto-cuerpo { color: var(--tinta-suave); }
+.vb-titulo-punto { color: var(--tinta); }
+
+.vb-nota-enlace {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--laton);
+}
+.dark .vb-nota-enlace { color: var(--laton-suave); }
+.vb-nota-enlace:hover { color: var(--purpura); }
+
+.vb-pie {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--cuero);
+  border-top: 1px solid var(--cuero-borde);
+}
+.dark .vb-pie { color: var(--laton-suave); }
+
+.vb-link-volver { color: var(--tinta-suave); }
+.vb-link-volver:hover { color: var(--purpura); }
+
+.vb-btn-editar {
+  background: var(--purpura);
+  color: var(--pergamino);
+  font-weight: 500;
+}
+.vb-btn-editar:hover { background: var(--cuero); }
+
+/* ── Cada rol lleva su propio borde, siempre visible — como el lomo
+   de colores de un comentario bíblico por secciones — para que se
+   distingan aunque no sea el punto que estás leyendo ahora mismo. */
+[class*="rol-"].vb-texto-normal,
+[class*="rol-"].vb-texto-visitado {
+  border-left: 2px solid color-mix(in srgb, var(--rol-color) 38%, transparent);
+  padding-left: 10px;
+  margin-left: -12px;
+}
+
+/* ── Resaltado de lectura: el punto actual intensifica SU PROPIO
+   color de rol, no siempre el mismo morado. ─────────────────── */
+.vb-texto-visitado { opacity: 0.5; transition: opacity 0.3s, background 0.3s, border-color 0.3s; }
+.vb-texto-normal { transition: opacity 0.3s, background 0.3s, border-color 0.3s; }
+.vb-texto-activo {
+  opacity: 1;
+  background: color-mix(in srgb, var(--rol-color, var(--purpura)) 9%, transparent);
+  border-left: 3px solid var(--rol-color, var(--purpura));
+  padding: 6px 10px;
+  margin-left: -13px;
+  border-radius: 0 6px 6px 0;
+  transition: opacity 0.3s, background 0.3s, border-color 0.3s;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EL LISTÓN — reemplaza la barra de progreso segmentada.
+   Una pista fina con marcas discretas por parada, y un listón de
+   marcapáginas que se desliza sobre ella (framer-motion anima el
+   "left"). El listón ES el elemento que resalta "por dónde vas";
+   las marcas son solo referencia y puntos de salto.
+   ═══════════════════════════════════════════════════════════════ */
+.vb-cinta-envoltura {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--pergamino);
+  border-top: 1px solid var(--cuero-borde);
+  box-shadow: 0 -2px 10px rgba(28, 26, 23, 0.08);
+  padding: 22px 16px 10px;
+}
+
+.vb-cinta-pista {
+  position: relative;
+  max-width: 640px;
+  margin: 0 auto;
+  height: 3px;
+  background: var(--pergamino-sombra);
+  border-radius: 2px;
+}
+
+.vb-cinta-marca {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 9px;
+  background: color-mix(in srgb, var(--rol-color, var(--cuero)) 45%, var(--pergamino-sombra));
+  border: none;
+  border-radius: 1px;
+  cursor: pointer;
+  transform: translateX(-50%);
+  padding: 0;
+  transition: background 0.2s, height 0.2s;
+}
+.vb-cinta-marca:hover { background: var(--rol-color, var(--purpura-suave)); }
+.vb-cinta-marca-visitada { background: var(--rol-color, var(--laton-suave)); opacity: 0.75; }
+.vb-cinta-marca-activa { background: var(--rol-color, var(--purpura)); height: 11px; top: -4px; }
+
+.vb-cinta-listón {
+  position: absolute;
+  top: -19px;
+  width: 15px;
+  height: 22px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, var(--purpura) 0%, var(--purpura) 70%, transparent 70%);
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
+  filter: drop-shadow(0 2px 3px rgba(28, 26, 23, 0.25));
+  pointer-events: none;
+}
+.dark .vb-cinta-listón {
+  background: linear-gradient(180deg, var(--laton-suave) 0%, var(--laton-suave) 70%, transparent 70%);
+}
+
+.vb-cinta-etiqueta {
+  font-family: var(--font-mono);
+  max-width: 640px;
+  margin: 8px auto 0;
+  font-size: 0.75rem;
+  color: var(--cuero);
+  text-align: center;
+}
+.dark .vb-cinta-etiqueta { color: var(--laton-suave); }
+
+/* ── Modal de nota, retonado a la paleta ───────────────────────── */
+.vb-premium .vb-modal-caja {
+  background: var(--pergamino);
+  border: 1px solid var(--cuero-borde);
+}
+.vb-premium .vb-modal-titulo { color: var(--purpura); font-family: 'Lora', serif; }
+.dark .vb-premium .vb-modal-titulo { color: var(--purpura-suave); }
+.vb-premium .vb-modal-texto { color: var(--tinta-suave); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vb-texto-normal, .vb-texto-visitado, .vb-texto-activo,
+  .vb-cinta-marca { transition: none; }
+}

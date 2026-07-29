@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
+import clsx from 'clsx';
 import { PencilIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useBosquejoStore } from '../stores/bosquejoStore';
 import Header from '../components/common/Header';
@@ -8,6 +10,7 @@ import { VersiculoLink } from '../lib/bibliaLink';
 import { decodificarSeccion } from '../lib/bosquejoSecciones';
 import { renderTextoConNotas, tieneTextoVisible } from '../lib/textoConNotas';
 import '../styles/bosquejo-editor.css';
+import '../styles/vb-premium.css';
 
 const ROMANOS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
                  'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
@@ -19,7 +22,7 @@ function marcador(nivel, i) {
   return String(i + 1);
 }
 
-/* ── Modal de nota ─────────────────────────────────────────── */
+/* ── Modal de nota, con entrada/salida animada ─────────────────── */
 function ModalNota({ titulo, texto, onCerrar }) {
   useEffect(() => {
     const onEsc = (e) => e.key === 'Escape' && onCerrar();
@@ -32,13 +35,24 @@ function ModalNota({ titulo, texto, onCerrar }) {
   }, [onCerrar]);
 
   return (
-    <div className="vb-modal-overlay" onClick={onCerrar}>
-      <div
+    <motion.div
+      className="vb-modal-overlay"
+      onClick={onCerrar}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+    >
+      <motion.div
         className="vb-modal-caja"
         role="dialog"
         aria-modal="true"
         aria-label="Nota"
         onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 340, damping: 28 }}
       >
         <div className="vb-modal-encabezado">
           <h3 className="vb-modal-titulo">📝 {titulo || 'Nota'}</h3>
@@ -47,32 +61,37 @@ function ModalNota({ titulo, texto, onCerrar }) {
           </button>
         </div>
         <p className="vb-modal-texto">{texto}</p>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 /* ── Un punto y sus subpuntos, recursivo ─────────────────────
    Cada punto y cada subpunto — sin importar el nivel — se registra
-   como una parada de la barra de progreso. */
+   como una parada del listón de progreso. */
 function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota, estadoDe }) {
   const subs = Array.isArray(punto.subpuntos) ? punto.subpuntos : [];
   const cuerpo = punto.descripcion ?? punto.desarrollo ?? '';
 
   const tamanos = ['text-lg', 'text-base', 'text-sm'];
   const sangrias = ['ml-0', 'ml-5', 'ml-9'];
+  const roles = ['rol-punto0', 'rol-punto1', 'rol-punto2'];
   const estado = estadoDe(punto.id);
 
   return (
     <div
       ref={(el) => registrarRef(punto.id, el)}
       data-punto-id={punto.id}
-      className={`mt-4 scroll-mt-28 ${sangrias[nivel] || 'ml-9'} vb-texto-${estado}`}
+      className={clsx(
+        'mt-4 scroll-mt-28',
+        sangrias[nivel] || 'ml-9',
+        roles[nivel] || 'rol-punto2',
+        `vb-texto-${estado}`
+      )}
     >
       <div className="flex gap-3">
         <span
-          className="font-serif text-primary-600 dark:text-primary-400 shrink-0 select-none"
-          style={{ minWidth: '2.1ch', textAlign: 'right' }}
+          className="font-serif vb-marcador"
           aria-hidden="true"
         >
           {marcador(nivel, indice)}.
@@ -80,13 +99,13 @@ function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota, estadoDe })
 
         <div className="min-w-0 flex-1">
           {punto.titulo && (
-            <h3 className={`font-semibold text-gray-800 dark:text-gray-200 ${tamanos[nivel] || 'text-sm'}`}>
+            <h3 className={clsx('font-semibold vb-titulo-punto', tamanos[nivel] || 'text-sm')}>
               {punto.titulo}
             </h3>
           )}
 
           {cuerpo && (
-            <p className="text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap leading-relaxed">
+            <p className="vb-texto-cuerpo mt-1 whitespace-pre-wrap leading-relaxed">
               {renderTextoConNotas(cuerpo, abrirNota, `pt-${punto.id}`)}
             </p>
           )}
@@ -102,7 +121,7 @@ function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota, estadoDe })
             {punto.notas?.trim() && (
               <button
                 type="button"
-                className="text-sm text-primary-600 dark:text-primary-400 underline decoration-dotted underline-offset-2 hover:text-primary-700 dark:hover:text-primary-300"
+                className="vb-nota-enlace underline decoration-dotted underline-offset-2"
                 onClick={() => abrirNota(punto.titulo, punto.notas)}
               >
                 📝 Ver nota
@@ -127,44 +146,54 @@ function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota, estadoDe })
   );
 }
 
-/* ── Barra de progreso — acompaña TODO el mensaje: Introducción,
-   cada punto, cada subpunto, Aplicación, Conclusión. ─────────── */
-function BarraProgreso({ paradas, activo, maxVisto, onSaltar }) {
-  if (paradas.length === 0) return null;
+/* ── El listón — un marcapáginas que se desliza sobre una pista.
+   Las marcas son referencia y punto de salto; el listón (framer-
+   motion) es el elemento que de verdad dice "por dónde vas". ──── */
+function Cinta({ paradas, activo, maxVisto, onSaltar }) {
+  if (paradas.length < 2) return null;
 
-  const i = paradas.findIndex((p) => p.id === activo);
-  const etiqueta = i === -1 ? null : `${i + 1} de ${paradas.length} — ${paradas[i].etiqueta}`;
+  const idx = paradas.findIndex((p) => p.id === activo);
+  const total = paradas.length;
+  const pct = idx <= 0 ? 0 : (idx / (total - 1)) * 100;
+  const etiqueta = idx === -1 ? null : `${idx + 1} de ${total} — ${paradas[idx].etiqueta}`;
 
   return (
-    <div className="vb-progreso-envoltura">
-      <div className="vb-progreso-segmentos">
-        {paradas.map((p, idx) => {
+    <div className="vb-cinta-envoltura">
+      <div className="vb-cinta-pista">
+        {paradas.map((p, i) => {
           const esActivo = p.id === activo;
-          const yaVisitado = idx <= maxVisto && !esActivo;
+          const yaVisitado = i <= maxVisto && !esActivo;
           return (
             <button
               key={p.id}
               type="button"
-              className={[
-                'vb-progreso-segmento',
-                esActivo && 'vb-progreso-activo',
-                yaVisitado && 'vb-progreso-visitado',
-              ].filter(Boolean).join(' ')}
+              className={clsx(
+                'vb-cinta-marca',
+                `rol-${p.rol}`,
+                esActivo && 'vb-cinta-marca-activa',
+                yaVisitado && 'vb-cinta-marca-visitada'
+              )}
+              style={{ left: `${total > 1 ? (i / (total - 1)) * 100 : 0}%` }}
               onClick={() => onSaltar(p.id)}
               title={p.etiqueta}
               aria-current={esActivo}
             />
           );
         })}
+        <motion.div
+          className="vb-cinta-listón"
+          animate={{ left: `${pct}%` }}
+          transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+        />
       </div>
-      {etiqueta && <p className="vb-progreso-etiqueta">{etiqueta}</p>}
+      {etiqueta && <p className="vb-cinta-etiqueta">{etiqueta}</p>}
     </div>
   );
 }
 
 /* Sección con uno o más campos con rótulo (Gancho/Conexión, Resumen/Llamado…),
-   registrada también como parada de la barra de progreso. */
-function SeccionCampos({ id, titulo, campos, notas, abrirNota, registrarRef, estadoDe }) {
+   registrada también como parada del listón de progreso. */
+function SeccionCampos({ id, rol, titulo, campos, notas, abrirNota, registrarRef, estadoDe }) {
   const conContenido = campos.filter((c) => c.texto?.trim());
   if (conContenido.length === 0 && !notas?.trim()) return null;
   const estado = estadoDe(id);
@@ -173,16 +202,16 @@ function SeccionCampos({ id, titulo, campos, notas, abrirNota, registrarRef, est
     <section
       ref={(el) => registrarRef(id, el)}
       data-punto-id={id}
-      className={`mt-8 scroll-mt-28 vb-texto-${estado}`}
+      className={clsx('mt-8 scroll-mt-28', `rol-${rol}`, `vb-texto-${estado}`)}
     >
       <div className="flex items-center justify-between gap-3 mb-2">
-        <h2 className="text-xl font-serif font-semibold text-gray-800 dark:text-gray-200">
+        <h2 className="text-xl font-semibold vb-rotulo-seccion">
           {titulo}
         </h2>
         {notas?.trim() && (
           <button
             type="button"
-            className="text-sm text-primary-600 dark:text-primary-400 underline decoration-dotted underline-offset-2 hover:text-primary-700 dark:hover:text-primary-300 shrink-0"
+            className="vb-nota-enlace underline decoration-dotted underline-offset-2 shrink-0"
             onClick={() => abrirNota(titulo, notas)}
           >
             📝 Ver nota
@@ -192,11 +221,11 @@ function SeccionCampos({ id, titulo, campos, notas, abrirNota, registrarRef, est
       {conContenido.map((c, i) => (
         <div key={i} className={i > 0 ? 'mt-3' : ''}>
           {c.rotulo && (
-            <h3 className="text-xs uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-0.5">
+            <h3 className="vb-eyebrow vb-rotulo-campo mb-0.5">
               {c.rotulo}
             </h3>
           )}
-          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+          <p className="vb-texto-cuerpo whitespace-pre-wrap leading-relaxed">
             {renderTextoConNotas(c.texto, abrirNota, `sec-${titulo}-${i}`)}
           </p>
         </div>
@@ -208,8 +237,9 @@ function SeccionCampos({ id, titulo, campos, notas, abrirNota, registrarRef, est
 /** Recorre puntos y subpuntos (cualquier nivel) y los agrega como paradas,
  * en el mismo orden en que se leen. */
 function recolectarPuntos(lista, nivel, paradas) {
+  const rol = nivel === 0 ? 'punto0' : nivel === 1 ? 'punto1' : 'punto2';
   lista.forEach((p, i) => {
-    paradas.push({ id: p.id, etiqueta: p.titulo || `Punto ${marcador(nivel, i)}` });
+    paradas.push({ id: p.id, etiqueta: p.titulo || `Punto ${marcador(nivel, i)}`, rol });
     if (Array.isArray(p.subpuntos) && p.subpuntos.length > 0) {
       recolectarPuntos(p.subpuntos, nivel + 1, paradas);
     }
@@ -252,25 +282,25 @@ const VerBosquejo = () => {
   const aplic = decodificarSeccion(currentBosquejo?.aplicacion, 'texto');
   const concl = decodificarSeccion(currentBosquejo?.conclusion, 'resumen');
 
-  // Paradas de la barra de progreso: TODO el mensaje en orden de lectura —
+  // Paradas del listón de progreso: TODO el mensaje en orden de lectura —
   // Introducción, cada punto y subpunto (cualquier nivel), Aplicación, Conclusión.
   const paradas = useMemo(() => {
     const lista = [];
     if (tieneTextoVisible(intro.gancho) || tieneTextoVisible(intro.conexion) || intro.notas?.trim()) {
-      lista.push({ id: 'intro', etiqueta: 'Introducción' });
+      lista.push({ id: 'intro', etiqueta: 'Introducción', rol: 'intro' });
     }
     recolectarPuntos(puntos, 0, lista);
     if (tieneTextoVisible(aplic.texto) || aplic.notas?.trim()) {
-      lista.push({ id: 'aplicacion', etiqueta: 'Aplicación' });
+      lista.push({ id: 'aplicacion', etiqueta: 'Aplicación', rol: 'aplicacion' });
     }
     if (tieneTextoVisible(concl.resumen) || tieneTextoVisible(concl.llamado) || concl.notas?.trim()) {
-      lista.push({ id: 'conclusion', etiqueta: 'Conclusión' });
+      lista.push({ id: 'conclusion', etiqueta: 'Conclusión', rol: 'conclusion' });
     }
     return lista;
   }, [currentBosquejo]);
 
   // Estado de cada parada respecto a dónde vas leyendo — se usa tanto en
-  // la barra de progreso como para atenuar/resaltar el texto mismo.
+  // el listón como para atenuar/resaltar el texto mismo.
   const indicePorId = useMemo(
     () => new Map(paradas.map((p, i) => [p.id, i])),
     [paradas]
@@ -320,7 +350,7 @@ const VerBosquejo = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="vb-premium min-h-screen">
         <Header />
         <div className="flex items-center justify-center h-64">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500" />
@@ -331,16 +361,16 @@ const VerBosquejo = () => {
 
   if (fallo || !currentBosquejo) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="vb-premium min-h-screen">
         <Header />
         <div className="max-w-3xl mx-auto p-6">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <div className="vb-tarjeta text-center">
+            <p className="vb-texto-cuerpo mb-4">
               {fallo || 'Ese bosquejo no existe.'}
             </p>
             <Link
               to="/bosquejos"
-              className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+              className="inline-flex items-center px-4 py-2 vb-btn-editar rounded-lg transition-colors"
             >
               <ArrowLeftIcon className="w-5 h-5 mr-2" />
               Ver mis bosquejos
@@ -352,34 +382,34 @@ const VerBosquejo = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="vb-premium min-h-screen">
       <Header />
 
       <div className="max-w-3xl mx-auto p-4 sm:p-6" style={paradas.length > 1 ? { paddingBottom: '84px' } : undefined}>
         <div className="mb-6 flex items-center justify-between gap-3">
           <Link
             to="/bosquejos"
-            className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            className="inline-flex items-center vb-link-volver transition-colors"
           >
             <ArrowLeftIcon className="w-5 h-5 mr-1" />
             Volver
           </Link>
           <Link
             to={`/bosquejos/${id}/editar`}
-            className="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 vb-btn-editar rounded-lg transition-colors"
           >
             <PencilIcon className="w-5 h-5 mr-2" />
             Editar
           </Link>
         </div>
 
-        <article className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sm:p-8">
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 dark:text-white mb-2">
+        <article className="vb-tarjeta">
+          <h1 className="vb-titulo font-serif font-bold">
             {currentBosquejo.titulo || 'Bosquejo'}
           </h1>
 
           {(currentBosquejo.tema?.trim() || currentBosquejo.proposito?.trim()) && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 italic">
+            <p className="vb-eyebrow mb-2">
               {currentBosquejo.tema?.trim() && <span>{currentBosquejo.tema}</span>}
               {currentBosquejo.tema?.trim() && currentBosquejo.proposito?.trim() && <span> · </span>}
               {currentBosquejo.proposito?.trim() && <span>{currentBosquejo.proposito}</span>}
@@ -387,7 +417,7 @@ const VerBosquejo = () => {
           )}
 
           {currentBosquejo.cita && (
-            <p className="text-primary-600 dark:text-primary-400 font-medium mb-6">
+            <p className="vb-cita mb-6">
               <span className="mr-1">📖</span>
               <VersiculoLink cita={currentBosquejo.cita} />
             </p>
@@ -395,6 +425,7 @@ const VerBosquejo = () => {
 
           <SeccionCampos
             id="intro"
+            rol="intro"
             titulo="Introducción"
             campos={[
               { rotulo: 'Gancho', texto: intro.gancho },
@@ -408,7 +439,7 @@ const VerBosquejo = () => {
 
           {puntos.length > 0 && (
             <section className="mt-8">
-              <h2 className="text-xl font-serif font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              <h2 className="text-xl font-semibold vb-rotulo-seccion mb-2">
                 Desarrollo
               </h2>
               {puntos.map((p, i) => (
@@ -427,6 +458,7 @@ const VerBosquejo = () => {
 
           <SeccionCampos
             id="aplicacion"
+            rol="aplicacion"
             titulo="Aplicación"
             campos={[{ rotulo: null, texto: aplic.texto }]}
             notas={aplic.notas}
@@ -437,6 +469,7 @@ const VerBosquejo = () => {
 
           <SeccionCampos
             id="conclusion"
+            rol="conclusion"
             titulo="Conclusión"
             campos={[
               { rotulo: 'Resumen', texto: concl.resumen },
@@ -448,7 +481,7 @@ const VerBosquejo = () => {
             estadoDe={estadoDe}
           />
 
-          <footer className="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2 justify-between text-sm text-gray-500 dark:text-gray-400">
+          <footer className="vb-pie mt-10 pt-6 flex flex-wrap gap-2 justify-between">
             <span>Creado: {new Date(currentBosquejo.createdAt).toLocaleDateString('es-CO')}</span>
             <span>Actualizado: {new Date(currentBosquejo.updatedAt).toLocaleDateString('es-CO')}</span>
           </footer>
@@ -456,16 +489,18 @@ const VerBosquejo = () => {
       </div>
 
       {paradas.length > 1 && (
-        <BarraProgreso paradas={paradas} activo={activo} maxVisto={maxVisto} onSaltar={saltarAParada} />
+        <Cinta paradas={paradas} activo={activo} maxVisto={maxVisto} onSaltar={saltarAParada} />
       )}
 
-      {nota && (
-        <ModalNota
-          titulo={nota.titulo}
-          texto={nota.texto}
-          onCerrar={() => setNota(null)}
-        />
-      )}
+      <AnimatePresence>
+        {nota && (
+          <ModalNota
+            titulo={nota.titulo}
+            texto={nota.texto}
+            onCerrar={() => setNota(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

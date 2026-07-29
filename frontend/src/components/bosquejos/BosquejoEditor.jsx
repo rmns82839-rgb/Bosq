@@ -1,8 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
+import clsx from 'clsx';
 import { VersiculoLink } from '../../lib/bibliaLink';
 import NotaBoton from './NotaBoton';
 import CampoTexto from './CampoTexto';
 import '../../styles/bosquejo-editor.css';
+import '../../styles/be-premium.css';
 
 /* ═══════════════════════════════════════════════════════════════
    NOTACIÓN HOMILÉTICA
@@ -19,6 +21,63 @@ function marcador(nivel, indice) {
   if (nivel === 0) return ROMANOS[indice] || String(indice + 1);
   if (nivel === 1) return LETRAS[indice] || String(indice + 1);
   return String(indice + 1);
+}
+
+const PROPOSITOS = [
+  'Evangelístico',
+  'Edificativo',
+  'Doctrinal',
+  'Motivacional / Exhortación',
+  'Correctivo',
+  'Consolador',
+  'Profético',
+  'Devocional',
+];
+
+/** Desplegable con los propósitos homiléticos más comunes, con una
+ * opción "Otro…" que abre un campo libre para lo que no esté en la lista. */
+function CampoProposito({ value, onChange }) {
+  const esPersonalizado = !!value && !PROPOSITOS.includes(value);
+  const [modoOtro, setModoOtro] = useState(esPersonalizado);
+
+  if (modoOtro) {
+    return (
+      <div className="be-proposito-otro">
+        <input
+          className="be-input be-proposito"
+          placeholder="Escribe el propósito…"
+          value={value || ''}
+          onChange={(e) => onChange(e.target.value)}
+          autoFocus
+        />
+        <button
+          type="button"
+          className="be-proposito-volver"
+          onClick={() => { setModoOtro(false); onChange(''); }}
+          title="Volver a la lista"
+        >
+          ✕
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <select
+      className="be-input be-proposito"
+      value={value || ''}
+      onChange={(e) => {
+        if (e.target.value === '__otro__') { setModoOtro(true); onChange(''); }
+        else onChange(e.target.value);
+      }}
+    >
+      <option value="">Propósito (opcional)</option>
+      {PROPOSITOS.map((p) => (
+        <option key={p} value={p}>{p}</option>
+      ))}
+      <option value="__otro__">Otro…</option>
+    </select>
+  );
 }
 
 const nuevoPunto = () => ({
@@ -108,9 +167,10 @@ function Punto({ punto, indice, total, nivel, ruta, acciones, plegados, togglePl
   const subs = punto.subpuntos || [];
   const plegado = plegados.has(punto.id);
   const puedeAnidar = nivel < MAX_NIVEL;
+  const roles = ['rol-punto0', 'rol-punto1', 'rol-punto2'];
 
   return (
-    <div className={`be-punto be-nivel-${nivel}`}>
+    <div className={clsx('be-punto', `be-nivel-${nivel}`, roles[nivel] || 'rol-punto2')}>
       <div className="be-punto-fila">
         <span className="be-marcador" aria-hidden="true">
           {marcador(nivel, indice)}.
@@ -315,7 +375,7 @@ export default function BosquejoEditor({
   const sinTitulo = !datos.titulo?.trim();
 
   return (
-    <div className="be-hoja">
+    <div className="be-hoja be-premium">
       <header className="be-encabezado">
         <div className="be-encabezado-texto">
           <h1 className="be-encabezado-titulo">{titulo}</h1>
@@ -369,16 +429,14 @@ export default function BosquejoEditor({
             value={datos.tema || ''}
             onChange={(e) => setCampo('tema', e.target.value)}
           />
-          <input
-            className="be-input be-proposito"
-            placeholder="Propósito (opcional) — ej: Evangelístico, Edificativo…"
-            value={datos.proposito || ''}
-            onChange={(e) => setCampo('proposito', e.target.value)}
+          <CampoProposito
+            value={datos.proposito}
+            onChange={(valor) => setCampo('proposito', valor)}
           />
         </div>
       </section>
 
-      <section className="be-seccion">
+      <section className="be-seccion rol-intro">
         <h2 className="be-rotulo">Introducción</h2>
         <div className="be-subcampo">
           <label className="be-subrotulo">Gancho</label>
@@ -423,7 +481,7 @@ export default function BosquejoEditor({
         </button>
       </section>
 
-      <section className="be-seccion">
+      <section className="be-seccion rol-aplicacion">
         <h2 className="be-rotulo">Aplicación</h2>
         <CampoTexto
           minRows={3}
@@ -437,7 +495,7 @@ export default function BosquejoEditor({
         />
       </section>
 
-      <section className="be-seccion">
+      <section className="be-seccion rol-conclusion">
         <h2 className="be-rotulo">Conclusión</h2>
         <div className="be-subcampo">
           <label className="be-subrotulo">Resumen</label>

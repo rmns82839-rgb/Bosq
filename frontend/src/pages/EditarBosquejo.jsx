@@ -74,7 +74,7 @@ const EditarBosquejo = () => {
 
   if (cargando) {
     return (
-      <div className="be-hoja" style={{ paddingTop: 80, textAlign: 'center' }}>
+      <div className="be-hoja be-premium" style={{ paddingTop: 80, textAlign: 'center' }}>
         <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-primary-500" />
       </div>
     );
@@ -82,7 +82,7 @@ const EditarBosquejo = () => {
 
   if (fallo) {
     return (
-      <div className="be-hoja" style={{ paddingTop: 60, textAlign: 'center' }}>
+      <div className="be-hoja be-premium" style={{ paddingTop: 60, textAlign: 'center' }}>
         <p style={{ marginBottom: 16 }}>{fallo}</p>
         <Link to="/bosquejos" className="be-btn be-btn-principal">
           Ver mis bosquejos

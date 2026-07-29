@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, animate as animarValor } from 'framer-motion';
 import clsx from 'clsx';
 import { PencilIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useBosquejoStore } from '../stores/bosquejoStore';
@@ -146,47 +146,151 @@ function PuntoLeido({ punto, indice, nivel, registrarRef, abrirNota, estadoDe })
   );
 }
 
-/* ── El listón — un marcapáginas que se desliza sobre una pista.
-   Las marcas son referencia y punto de salto; el listón (framer-
-   motion) es el elemento que de verdad dice "por dónde vas". ──── */
+/* ── El listón — ahora un botón redondo bien visible que se desliza
+   sobre una pista más gruesa. Al arrastrarlo se "imanta" al punto
+   más cercano al instante — nunca queda a medio camino — y suelta
+   ahí mismo. Los botones ◀▶ avanzan de a uno con total confiabilidad
+   (ya no compiten con el observer de scroll). ──────────────────── */
+const ANCHO_LISTON = 22; // debe coincidir con el width en vb-premium.css
+
 function Cinta({ paradas, activo, maxVisto, onSaltar }) {
-  if (paradas.length < 2) return null;
+  const pistaRef = useRef(null);
+  const [anchoPista, setAnchoPista] = useState(0);
+  const [arrastrando, setArrastrando] = useState(false);
+  const [indiceImantado, setIndiceImantado] = useState(null);
+  const x = useMotionValue(0);
+
+  useEffect(() => {
+    const el = pistaRef.current;
+    if (!el) return;
+    const medir = () => setAnchoPista(el.getBoundingClientRect().width);
+    medir();
+    const ro = new ResizeObserver(medir);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [paradas.length]);
 
   const idx = paradas.findIndex((p) => p.id === activo);
   const total = paradas.length;
-  const pct = idx <= 0 ? 0 : (idx / (total - 1)) * 100;
-  const etiqueta = idx === -1 ? null : `${idx + 1} de ${total} — ${paradas[idx].etiqueta}`;
+  const pct = total > 1 && idx > 0 ? (idx / (total - 1)) * 100 : 0;
+  const porcentaje = idx === -1 ? 0 : Math.round(pct);
+  const etiqueta = idx === -1 ? null : paradas[idx]?.etiqueta;
+  const xObjetivo = Math.max(0, anchoPista * (pct / 100) - ANCHO_LISTON / 2);
+
+  // Cuando no estás arrastrando, el listón sigue a "activo" con resorte.
+  useEffect(() => {
+    if (arrastrando) return;
+    const controls = animarValor(x, xObjetivo, { type: 'spring', stiffness: 340, damping: 32 });
+    return () => controls.stop();
+  }, [xObjetivo, arrastrando]);
+
+  if (paradas.length < 2) return null;
+
+  const idxDesdeX = (clientX) => {
+    const rect = pistaRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return null;
+    const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    return Math.round(frac * (total - 1));
+  };
+
+  const irARelativo = (delta) => {
+    if (idx === -1) return;
+    const destino = Math.min(total - 1, Math.max(0, idx + delta));
+    if (paradas[destino]) onSaltar(paradas[destino].id);
+  };
+
+  const saltarDesdePuntero = (clientX) => {
+    const destino = idxDesdeX(clientX);
+    if (destino !== null && paradas[destino]) onSaltar(paradas[destino].id);
+  };
 
   return (
     <div className="vb-cinta-envoltura">
-      <div className="vb-cinta-pista">
-        {paradas.map((p, i) => {
-          const esActivo = p.id === activo;
-          const yaVisitado = i <= maxVisto && !esActivo;
-          return (
-            <button
-              key={p.id}
-              type="button"
-              className={clsx(
-                'vb-cinta-marca',
-                `rol-${p.rol}`,
-                esActivo && 'vb-cinta-marca-activa',
-                yaVisitado && 'vb-cinta-marca-visitada'
-              )}
-              style={{ left: `${total > 1 ? (i / (total - 1)) * 100 : 0}%` }}
-              onClick={() => onSaltar(p.id)}
-              title={p.etiqueta}
-              aria-current={esActivo}
-            />
-          );
-        })}
-        <motion.div
-          className="vb-cinta-listón"
-          animate={{ left: `${pct}%` }}
-          transition={{ type: 'spring', stiffness: 280, damping: 30 }}
-        />
+      <div className="vb-cinta-fila">
+        <button
+          type="button"
+          className="vb-cinta-paso"
+          onClick={() => irARelativo(-1)}
+          disabled={idx <= 0}
+          aria-label="Punto anterior"
+        >
+          ◀
+        </button>
+
+        <div
+          className="vb-cinta-pista"
+          ref={pistaRef}
+          onClick={(e) => saltarDesdePuntero(e.clientX)}
+        >
+          {paradas.map((p, i) => {
+            const esActivo = p.id === activo;
+            const yaVisitado = i <= maxVisto && !esActivo;
+            const esImantada = arrastrando && i === indiceImantado;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={clsx(
+                  'vb-cinta-marca',
+                  `rol-${p.rol}`,
+                  esActivo && 'vb-cinta-marca-activa',
+                  yaVisitado && 'vb-cinta-marca-visitada',
+                  esImantada && 'vb-cinta-marca-imantada'
+                )}
+                style={{ left: `${total > 1 ? (i / (total - 1)) * 100 : 0}%` }}
+                onClick={(e) => { e.stopPropagation(); onSaltar(p.id); }}
+                title={p.etiqueta}
+                aria-current={esActivo}
+              >
+                <span className="vb-cinta-marca-linea" />
+              </button>
+            );
+          })}
+          <motion.div
+            className="vb-cinta-listón"
+            style={{ x }}
+            drag="x"
+            dragConstraints={pistaRef}
+            dragElastic={0}
+            dragMomentum={false}
+            whileDrag={{ scale: 1.18 }}
+            onDragStart={() => setArrastrando(true)}
+            onDrag={(e, info) => {
+              // Imán: mientras arrastras, el listón no sigue el dedo
+              // libremente — salta directo al punto más cercano.
+              const destino = idxDesdeX(info.point.x);
+              if (destino === null) return;
+              setIndiceImantado(destino);
+              const snapX = Math.max(0, anchoPista * (total > 1 ? destino / (total - 1) : 0) - ANCHO_LISTON / 2);
+              x.set(snapX);
+            }}
+            onDragEnd={() => {
+              setArrastrando(false);
+              if (indiceImantado !== null && paradas[indiceImantado]) {
+                onSaltar(paradas[indiceImantado].id);
+              }
+              setIndiceImantado(null);
+            }}
+          />
+        </div>
+
+        <button
+          type="button"
+          className="vb-cinta-paso"
+          onClick={() => irARelativo(1)}
+          disabled={idx === -1 || idx >= total - 1}
+          aria-label="Punto siguiente"
+        >
+          ▶
+        </button>
       </div>
-      {etiqueta && <p className="vb-cinta-etiqueta">{etiqueta}</p>}
+
+      {etiqueta && (
+        <p className="vb-cinta-etiqueta">
+          <span className="vb-cinta-porcentaje">{porcentaje}%</span>
+          <span> · {idx + 1} de {total} — {etiqueta}</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -317,12 +421,19 @@ const VerBosquejo = () => {
     [paradas, indicePorId, activo, maxVisto]
   );
 
+  // Mientras el scroll suave de un salto manual está en tránsito, el
+  // observer puede "ver" de paso un punto grande con más área visible
+  // y robarle el control al que en realidad pediste. Esta ventana evita
+  // que lo pise durante esos ~600ms.
+  const ignorarObservadorHasta = useRef(0);
+
   useEffect(() => {
     if (paradas.length === 0) return;
     if (!activo) setActivo(paradas[0].id);
 
     const observer = new IntersectionObserver(
       (entries) => {
+        if (Date.now() < ignorarObservadorHasta.current) return;
         const visibles = entries
           .filter((e) => e.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
@@ -345,6 +456,10 @@ const VerBosquejo = () => {
 
   const saltarAParada = (idParada) => {
     const el = refsPuntos.current.get(idParada);
+    // Actualiza de inmediato — no espera a que el observer confirme
+    // tras el scroll, así ◀▶ y el listón nunca se sienten "atrasados".
+    setActivo(idParada);
+    ignorarObservadorHasta.current = Date.now() + 700;
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -385,7 +500,7 @@ const VerBosquejo = () => {
     <div className="vb-premium min-h-screen">
       <Header />
 
-      <div className="max-w-3xl mx-auto p-4 sm:p-6" style={paradas.length > 1 ? { paddingBottom: '84px' } : undefined}>
+      <div className="max-w-3xl mx-auto p-4 sm:p-6" style={paradas.length > 1 ? { paddingBottom: '96px' } : undefined}>
         <div className="mb-6 flex items-center justify-between gap-3">
           <Link
             to="/bosquejos"

@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
    TOKENS PREMIUM COMPARTIDOS
    Pergamino + tinta + morado litúrgico + latón envejecido.
-   Se aplican en dos pantallas — VerBosquejo (.vb-premium) y el
-   Editor (.be-premium) — con la MISMA paleta, para que pasar de
-   leer a editar se sienta como el mismo objeto físico.
+   Se aplican en cualquier pantalla que lleve la clase .premium
+   (o sus variantes .vb-premium / .be-premium, que además traen
+   sus propios ajustes específicos) — para que toda la app se
+   sienta como el mismo objeto físico, no pantallas distintas.
 
    Truco: además de las variables "reales" (--pergamino, --tinta…),
    definimos ALIAS con los nombres genéricos que el CSS del editor
@@ -15,7 +16,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-:where(.vb-premium, .be-premium) {
+:where(.vb-premium, .be-premium, .premium) {
   /* Paleta real */
   --tinta: #1c1a17;
   --tinta-suave: #4a443c;
@@ -57,7 +58,7 @@
   min-height: 100vh;
 }
 
-:where(.vb-premium.dark, .dark .vb-premium, .be-premium.dark, .dark .be-premium) {
+:where(.vb-premium.dark, .dark .vb-premium, .be-premium.dark, .dark .be-premium, .premium.dark, .dark .premium) {
   --tinta: #ece3cc;
   --tinta-suave: #c9bfa8;
   --pergamino: #211d1a;

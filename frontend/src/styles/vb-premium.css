@@ -133,10 +133,11 @@
 
 /* ═══════════════════════════════════════════════════════════════
    EL LISTÓN — reemplaza la barra de progreso segmentada.
-   Una pista fina con marcas discretas por parada, y un listón de
-   marcapáginas que se desliza sobre ella (framer-motion anima el
-   "left"). El listón ES el elemento que resalta "por dónde vas";
-   las marcas son solo referencia y puntos de salto.
+   Interactivo de verdad: se arrastra para saltar a cualquier punto,
+   tiene botones ◀▶ para avanzar de a uno, y las marcas tienen zona
+   de toque generosa (no solo su línea visual de 2px). El ancho de
+   la pista se mide en vivo desde JS (ResizeObserver) — el CSS solo
+   define el máximo, la posición real siempre es responsive.
    ═══════════════════════════════════════════════════════════════ */
 .vb-cinta-envoltura {
   position: fixed;
@@ -147,59 +148,125 @@
   background: var(--pergamino);
   border-top: 1px solid var(--cuero-borde);
   box-shadow: 0 -2px 10px rgba(28, 26, 23, 0.08);
-  padding: 22px 16px 10px;
+  padding: 20px 12px 10px;
 }
+
+.vb-cinta-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.vb-cinta-paso {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--cuero);
+  font-size: 0.8rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+.vb-cinta-paso:hover:not(:disabled) { background: var(--pergamino-sombra); color: var(--purpura); }
+.vb-cinta-paso:disabled { opacity: 0.25; cursor: default; }
 
 .vb-cinta-pista {
   position: relative;
-  max-width: 640px;
-  margin: 0 auto;
-  height: 3px;
+  flex: 1;
+  height: 32px;         /* zona de toque alta, aunque la línea visual sea fina */
+  cursor: pointer;
+  touch-action: pan-y;  /* el toque horizontal en la pista salta, el vertical sigue haciendo scroll */
+}
+.vb-cinta-pista::before {
+  /* la línea visual de la pista, centrada dentro de la zona de toque */
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transform: translateY(-50%);
   background: var(--pergamino-sombra);
-  border-radius: 2px;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 2px rgba(28, 26, 23, 0.12);
 }
 
 .vb-cinta-marca {
   position: absolute;
-  top: -3px;
-  width: 2px;
-  height: 9px;
-  background: color-mix(in srgb, var(--rol-color, var(--cuero)) 45%, var(--pergamino-sombra));
+  top: 0;
+  bottom: 0;
+  width: 22px;           /* zona de toque real — cómoda en móvil */
+  background: none;
   border: none;
-  border-radius: 1px;
   cursor: pointer;
   transform: translateX(-50%);
   padding: 0;
-  transition: background 0.2s, height 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
 }
-.vb-cinta-marca:hover { background: var(--rol-color, var(--purpura-suave)); }
-.vb-cinta-marca-visitada { background: var(--rol-color, var(--laton-suave)); opacity: 0.75; }
-.vb-cinta-marca-activa { background: var(--rol-color, var(--purpura)); height: 11px; top: -4px; }
+.vb-cinta-marca-linea {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--rol-color, var(--cuero)) 50%, var(--pergamino-sombra));
+  border: 2px solid var(--pergamino);
+  transition: background 0.2s, transform 0.15s;
+}
+.vb-cinta-marca:hover .vb-cinta-marca-linea { background: var(--rol-color, var(--purpura-suave)); }
+.vb-cinta-marca-visitada .vb-cinta-marca-linea { background: var(--rol-color, var(--laton-suave)); opacity: 0.85; }
+.vb-cinta-marca-activa .vb-cinta-marca-linea {
+  background: var(--rol-color, var(--purpura));
+  transform: scale(1.25);
+}
+/* Mientras arrastras el listón, la marca más cercana se agranda —
+   es el "imán" avisándote a cuál punto vas a saltar si sueltas ya. */
+.vb-cinta-marca-imantada .vb-cinta-marca-linea {
+  background: var(--rol-color, var(--purpura));
+  transform: scale(1.6);
+}
 
 .vb-cinta-listón {
   position: absolute;
-  top: -19px;
-  width: 15px;
+  top: 5px;
+  left: 0;
+  width: 22px;
   height: 22px;
-  transform: translateX(-50%);
-  background: linear-gradient(180deg, var(--purpura) 0%, var(--purpura) 70%, transparent 70%);
-  clip-path: polygon(0 0, 100% 0, 100% 72%, 50% 100%, 0 72%);
-  filter: drop-shadow(0 2px 3px rgba(28, 26, 23, 0.25));
-  pointer-events: none;
+  border-radius: 50%;
+  background: var(--rol-color, var(--purpura));
+  border: 3px solid var(--pergamino);
+  box-shadow:
+    0 2px 6px rgba(28, 26, 23, 0.35),
+    0 0 0 1px var(--cuero-borde);
+  cursor: grab;
+  touch-action: none;   /* el arrastre horizontal del listón no debe scrollear la página */
+  z-index: 2;
 }
-.dark .vb-cinta-listón {
-  background: linear-gradient(180deg, var(--laton-suave) 0%, var(--laton-suave) 70%, transparent 70%);
-}
+.vb-cinta-listón:active { cursor: grabbing; }
 
 .vb-cinta-etiqueta {
   font-family: var(--font-mono);
-  max-width: 640px;
-  margin: 8px auto 0;
+  max-width: 680px;
+  margin: 6px auto 0;
   font-size: 0.75rem;
   color: var(--cuero);
   text-align: center;
 }
 .dark .vb-cinta-etiqueta { color: var(--laton-suave); }
+
+.vb-cinta-porcentaje {
+  font-weight: 600;
+  color: var(--rol-color, var(--purpura));
+}
+.dark .vb-cinta-porcentaje { color: var(--purpura-suave); }
 
 /* ── Modal de nota, retonado a la paleta ───────────────────────── */
 .vb-premium .vb-modal-caja {
@@ -212,5 +279,26 @@
 
 @media (prefers-reduced-motion: reduce) {
   .vb-texto-normal, .vb-texto-visitado, .vb-texto-activo,
-  .vb-cinta-marca { transition: none; }
+  .vb-cinta-marca-linea { transition: none; }
+}
+
+/* ── Responsive: pantallas angostas ────────────────────────────── */
+@media (max-width: 400px) {
+  .vb-cinta-envoltura { padding: 16px 6px 8px; }
+  .vb-cinta-paso { width: 26px; height: 26px; font-size: 0.7rem; }
+  .vb-cinta-etiqueta { font-size: 0.68rem; }
+  /* En pantallas muy angostas con muchas paradas, prioriza el
+     porcentaje y acorta la etiqueta con elipsis en vez de partir línea. */
+  .vb-cinta-etiqueta span:last-child {
+    display: inline-block;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+}
+
+@media (min-width: 401px) and (max-width: 640px) {
+  .vb-cinta-envoltura { padding: 18px 10px 9px; }
 }

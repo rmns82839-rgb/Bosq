@@ -1,0 +1,126 @@
+/* ═══════════════════════════════════════════════════════════════
+   KIT DE COMPONENTES PREMIUM
+   Piezas reutilizables para cualquier pantalla que lleve la clase
+   .premium — pensado para Login, Registro y la Lista de Bosquejos,
+   pero sirve para lo que venga después sin repetir código.
+   ═══════════════════════════════════════════════════════════════ */
+
+@import url('./premium-tokens.css');
+
+.premium { background: var(--pergamino); color: var(--tinta); min-height: 100vh; }
+
+/* ── Encabezado de marca ("✝️ Bosqu") ──────────────────────────── */
+.premium-logo {
+  color: var(--purpura);
+  font-family: 'Lora', serif;
+}
+.dark .premium-logo { color: var(--purpura-suave); }
+
+.premium-titulo { font-family: 'Lora', serif; color: var(--tinta); }
+
+.premium-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--cuero);
+}
+.dark .premium-eyebrow { color: var(--laton-suave); }
+
+.premium-texto-muted { color: var(--cuero); }
+.dark .premium-texto-muted { color: var(--laton-suave); }
+
+/* ── Tarjeta genérica: la misma página de pergamino que en
+   VerBosquejo y el editor ─────────────────────────────────────── */
+.premium-tarjeta {
+  background: var(--pergamino);
+  border: 1px solid var(--cuero-borde);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 2px rgba(28, 26, 23, 0.06),
+    0 6px 18px rgba(28, 26, 23, 0.08);
+}
+
+/* ── Campos de formulario ──────────────────────────────────────── */
+.premium-input {
+  width: 100%;
+  background: var(--pergamino-sombra);
+  border: 1px solid var(--cuero-borde);
+  color: var(--tinta);
+  font-family: inherit;
+  border-radius: 6px;
+  padding: 10px 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.premium-input::placeholder { color: var(--cuero); opacity: 0.7; }
+.premium-input:focus {
+  outline: none;
+  border-color: var(--purpura);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--purpura) 15%, transparent);
+}
+
+/* Cuando el input lleva un ícono a la izquierda (buscador), este
+   modificador gana la pelea de especificidad contra pl-10 de
+   Tailwind — .premium-input ya fija su propio padding-left. */
+.premium-input--con-icono { padding-left: 40px; }
+
+/* ── Botones ────────────────────────────────────────────────────── */
+.premium-btn-principal {
+  background: var(--purpura);
+  color: var(--pergamino);
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  transition: background 0.15s, opacity 0.15s;
+}
+.premium-btn-principal:hover:not(:disabled) { background: var(--cuero); }
+.premium-btn-principal:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.premium-link {
+  color: var(--purpura);
+  font-weight: 500;
+}
+.dark .premium-link { color: var(--purpura-suave); }
+.premium-link:hover { color: var(--cuero); }
+
+/* ── Estado vacío / mensajes de sistema ────────────────────────── */
+.premium-vacio {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--pergamino);
+  border: 1px dashed var(--cuero-borde);
+  border-radius: 8px;
+  color: var(--cuero);
+}
+.dark .premium-vacio { color: var(--laton-suave); }
+
+/* ── Tarjeta de bosquejo en la lista (BosquejoCard) ────────────── */
+.premium-card-bosquejo {
+  background: var(--pergamino);
+  border: 1px solid var(--cuero-borde);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(28, 26, 23, 0.05);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.premium-card-bosquejo:hover {
+  box-shadow: 0 8px 20px rgba(28, 26, 23, 0.12);
+  transform: translateY(-1px);
+}
+
+.premium-card-titulo { font-family: 'Lora', serif; color: var(--tinta); }
+.premium-card-cita { color: var(--purpura); font-weight: 500; }
+.dark .premium-card-cita { color: var(--purpura-suave); }
+
+.premium-card-icono {
+  color: var(--cuero);
+  transition: color 0.15s;
+}
+.dark .premium-card-icono { color: var(--laton-suave); }
+.premium-card-icono:hover { color: var(--purpura); }
+.premium-card-icono-borrar:hover { color: #a83c3c; }
+
+.premium-card-pie {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--cuero);
+  border-top: 1px solid var(--cuero-borde);
+}
+.dark .premium-card-pie { color: var(--laton-suave); }

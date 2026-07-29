@@ -64,3 +64,40 @@
 .be-premium .be-seccion[class*="rol-"] {
   border-left: 3px solid color-mix(in srgb, var(--rol-color) 45%, transparent);
 }
+
+/* ── Diapositivas del editor ────────────────────────────────────── */
+.be-premium .dp-punto-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.be-premium .dp-marcador-grande {
+  font-family: 'Lora', serif;
+  font-size: 2.2rem;
+  color: var(--rol-color, var(--primary-color));
+  line-height: 1;
+}
+
+.be-premium .dp-titulo-input {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.be-premium .dp-agregar-centro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 60vh;
+  text-align: center;
+}
+
+.be-premium .dp-agregar-nota {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

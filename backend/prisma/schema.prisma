@@ -23,16 +23,113 @@ model Bosquejo {
   id           String   @id @default(cuid())
   titulo       String
   cita         String?
-  tema         String?
-  proposito    String?
   introduccion String?
   aplicacion   String?
   conclusion   String?
   puntos       Json     @default("[]")
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  proposito    String?
+  tema         String?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("bosquejos")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MÓDULOS DE ESTUDIO BÍBLICO (Angelología, Cristología, Numerología,
+// Reyes, Profecías, Juicios, Palabras de Jesús, Espíritu Santo)
+// Cada tabla guarda solo la CITA ("Juan 1:29"), nunca el texto del
+// versículo — el texto se abre en YouVersion vía VersiculoLink,
+// igual que en los bosquejos. Así se evita el problema de derechos
+// de autor de guardar la RVR1960 completa.
+// ═══════════════════════════════════════════════════════════════
+
+model Angel {
+  id          String   @id @default(cuid())
+  nombre      String
+  tipo        String?
+  cita        String?
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  @@map("angeles")
+}
+
+model TituloMesias {
+  id          String   @id @default(cuid())
+  titulo      String
+  categoria   String?
+  cita        String?
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  @@map("titulos_mesias")
+}
+
+model NumeroBiblico {
+  id          String   @id @default(cuid())
+  numero      Int
+  significado String
+  cita        String?
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  @@map("numeros_biblicos")
+}
+
+model Rey {
+  id         String   @id @default(cuid())
+  nombre     String
+  reino      String
+  inicioAc   Int?
+  finAc      Int?
+  evaluacion String?
+  cita       String?
+  createdAt  DateTime @default(now())
+
+  @@map("reyes")
+}
+
+model ProfeciaMesianica {
+  id               String   @id @default(cuid())
+  tema             String
+  citaProfecia     String
+  citaCumplimiento String?
+  createdAt        DateTime @default(now())
+
+  @@map("profecias_mesianicas")
+}
+
+model JuicioJehova {
+  id          String   @id @default(cuid())
+  sobre       String
+  estado      String
+  descripcion String?
+  cita        String
+  createdAt   DateTime @default(now())
+
+  @@map("juicios_jehova")
+}
+
+model PalabraJesus {
+  id        String   @id @default(cuid())
+  tipo      String
+  cita      String
+  resumen   String?
+  createdAt DateTime @default(now())
+
+  @@map("palabras_jesus")
+}
+
+model EspirituSanto {
+  id          String   @id @default(cuid())
+  categoria   String
+  titulo      String
+  cita        String?
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  @@map("espiritu_santo")
 }

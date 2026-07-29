@@ -1,0 +1,133 @@
+/* ═══════════════════════════════════════════════════════════════
+   DIAPOSITIVAS — una parada del bosquejo a pantalla completa.
+   Se distinguen SOLO por su color de rol (premium-tokens.css),
+   nunca por tamaño de letra — el texto es igual de grande en todas.
+   ═══════════════════════════════════════════════════════════════ */
+
+.dp-contenedor {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dp-lienzo {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dp-diapositiva {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--rol-color, var(--purpura)) 6%, var(--pergamino));
+  border-top: 4px solid var(--rol-color, var(--purpura));
+  cursor: grab;
+  touch-action: pan-y;
+}
+.dp-diapositiva:active { cursor: grabbing; }
+
+.dp-diapositiva-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: 28px 20px 24px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+@media (min-width: 640px) { .dp-diapositiva-scroll { padding: 40px 48px; } }
+
+.dp-rotulo {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rol-color, var(--purpura));
+  margin-bottom: 18px;
+}
+
+/* Mismo tamaño en TODAS las diapositivas, sin importar el nivel —
+   la jerarquía la da el color del rol, no la letra. */
+.dp-titulo {
+  font-family: 'Lora', serif;
+  font-size: 1.6rem;
+  line-height: 1.3;
+  color: var(--tinta);
+}
+
+.dp-texto {
+  font-size: 1.15rem;
+  line-height: 1.75;
+  color: var(--tinta-suave);
+  white-space: pre-wrap;
+}
+
+/* ── Navegación inferior ───────────────────────────────────────── */
+.dp-nav {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--pergamino);
+  border-top: 1px solid var(--cuero-borde);
+}
+
+.dp-flecha {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--cuero);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+.dp-flecha:hover:not(:disabled) { background: var(--pergamino-sombra); color: var(--purpura); }
+.dp-flecha:disabled { opacity: 0.25; cursor: default; }
+
+.dp-puntos {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scrollbar-width: none;
+}
+.dp-puntos::-webkit-scrollbar { display: none; }
+
+.dp-punto {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: color-mix(in srgb, var(--rol-color, var(--cuero)) 40%, var(--pergamino-sombra));
+  transition: transform 0.15s, background 0.15s;
+}
+.dp-punto:hover { transform: scale(1.3); }
+.dp-punto-visitado { background: var(--rol-color, var(--laton-suave)); opacity: 0.8; }
+.dp-punto-activo {
+  background: var(--rol-color, var(--purpura));
+  transform: scale(1.5);
+}
+
+.dp-contador {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--cuero);
+  padding: 0 14px 8px;
+  text-align: right;
+  background: var(--pergamino);
+}
+.dark .dp-contador { color: var(--laton-suave); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dp-punto, .dp-flecha { transition: none; }
+}

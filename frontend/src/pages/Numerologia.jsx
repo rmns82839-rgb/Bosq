@@ -1,38 +1,24 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { getNumeros } from '../lib/db.js'
+import { VersiculoLink } from '../lib/bibliaLink'
+import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 
-const TIPOS_COLOR = {
-  divino:       '#C9A84C',
-  teológico:    '#A78BFA',
-  creación:     '#34D399',
-  humano:       '#FB923C',
-  prueba:       '#F87171',
-  legal:        '#60A5FA',
-  gobierno:     '#818CF8',
-  profético:    '#FB923C',
-  redentor:     '#34D399',
-  sacerdotal:   '#7EB8D4',
-  celestial:    '#C9A84C',
-  escatológico: '#F87171',
-  simbólico:    '#FBBF24',
-  gracia:       '#6AAF7E',
+const CATEGORIA_COLOR = {
+  divino: '#C9A84C', humano: '#FB923C', gobierno: '#818CF8',
+  prueba: '#F87171', escatológico: '#F87171', creación: '#34D399',
 }
 
 export default function Numerologia() {
-  const [numeros, setNumeros]     = useState([])
-  const [loading, setLoading]     = useState(true)
-  const [filtroTipo, setFiltroTipo] = useState('todos')
-  const [seleccionado, setSeleccionado] = useState(null)
-  const navigate = useNavigate()
+  const [numeros, setNumeros] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filtroCat, setFiltroCat] = useState('todos')
 
   useEffect(() => {
     getNumeros().then(d => { setNumeros(d); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  const tipos = [...new Set(numeros.map(n => n.tipo))]
-
-  const filtrados = filtroTipo === 'todos' ? numeros : numeros.filter(n => n.tipo === filtroTipo)
+  const categorias = [...new Set(numeros.map(n => n.categoria).filter(Boolean))]
+  const filtrados = filtroCat === 'todos' ? numeros : numeros.filter(n => n.categoria === filtroCat)
 
   return (
     <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
@@ -42,35 +28,27 @@ export default function Numerologia() {
           Numerología Bíblica
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-          Los números con significado teológico en la Biblia — su simbolismo y contexto según el texto RV1960
+          Números con significado teológico — toca "Preguntar a la IA" para el contexto completo de cada uno
         </p>
       </div>
 
-      {/* Nota aclaratoria */}
-      <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 20 }}>
-        <p style={{ fontSize: 12, color: '#C9A84C', lineHeight: 1.6, margin: 0 }}>
-          <strong>Nota:</strong> Los significados se basan en el uso consistente de estos números en el texto bíblico mismo, no en especulaciones externas. El número tiene significado porque Dios lo usa repetidamente en contextos similares a lo largo de toda la Escritura.
-        </p>
-      </div>
-
-      {/* Filtros por tipo */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-        <button onClick={() => setFiltroTipo('todos')} style={{
+        <button onClick={() => setFiltroCat('todos')} style={{
           fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${filtroTipo === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
-          background: filtroTipo === 'todos' ? 'var(--gold-glow)' : 'none',
-          color: filtroTipo === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
+          border: `1px solid ${filtroCat === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
+          background: filtroCat === 'todos' ? 'var(--gold-glow)' : 'none',
+          color: filtroCat === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
         }}>Todos ({numeros.length})</button>
-        {tipos.map(t => {
-          const color = TIPOS_COLOR[t] || 'var(--text-muted)'
-          const count = numeros.filter(n => n.tipo === t).length
+        {categorias.map(c => {
+          const color = CATEGORIA_COLOR[c] || 'var(--text-muted)'
+          const count = numeros.filter(n => n.categoria === c).length
           return (
-            <button key={t} onClick={() => setFiltroTipo(t)} style={{
+            <button key={c} onClick={() => setFiltroCat(c)} style={{
               fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
-              border: `1px solid ${filtroTipo === t ? color : 'var(--border2)'}`,
-              background: filtroTipo === t ? `${color}18` : 'none',
-              color: filtroTipo === t ? color : 'var(--text-muted)', cursor: 'pointer',
-            }}>{t} ({count})</button>
+              border: `1px solid ${filtroCat === c ? color : 'var(--border2)'}`,
+              background: filtroCat === c ? `${color}18` : 'none',
+              color: filtroCat === c ? color : 'var(--text-muted)', cursor: 'pointer',
+            }}>{c} ({count})</button>
           )
         })}
       </div>
@@ -79,67 +57,38 @@ export default function Numerologia() {
 
       {!loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {filtrados.map((n, i) => {
-            const color = TIPOS_COLOR[n.tipo] || '#C9A84C'
-            const isOpen = seleccionado === i
+          {filtrados.map((n) => {
+            const color = CATEGORIA_COLOR[n.categoria] || '#C9A84C'
             return (
-              <div key={i} style={{ background: 'var(--surface)', border: `1px solid ${color}20`, borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                <div onClick={() => setSeleccionado(isOpen ? null : i)} style={{ padding: '16px', cursor: 'pointer', display: 'flex', gap: 16, alignItems: 'center' }}>
-
-                  {/* Número grande */}
-                  <div style={{
-                    width: 64, height: 64, borderRadius: 8, flexShrink: 0,
-                    background: `${color}12`, border: `2px solid ${color}40`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <span style={{ fontFamily: 'var(--crimson)', fontSize: n.numero > 999 ? 14 : 28, color, fontWeight: 400, lineHeight: 1 }}>
-                      {n.numero.toLocaleString('es-CO')}
-                    </span>
-                  </div>
-
-                  {/* Info */}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'var(--crimson)', fontSize: 18, color: 'var(--text)', marginBottom: 4 }}>
-                      {n.nombre}
-                    </div>
-                    <div style={{ fontSize: 13, color: color, fontStyle: 'italic', marginBottom: 4 }}>
-                      {n.significado}
-                    </div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', display: 'flex', gap: 12 }}>
-                      <span>{n.libro} {n.capitulo}:{n.versiculo}</span>
-                      <span style={{ color, background: `${color}15`, borderRadius: 3, padding: '1px 6px', border: `1px solid ${color}30` }}>{n.tipo}</span>
-                    </div>
-                  </div>
-
-                  <span style={{ color: 'var(--text-muted)', fontSize: 10, transition: 'transform 0.2s', transform: isOpen ? 'rotate(90deg)' : 'none' }}>▶</span>
+              <div key={n.id} style={{
+                background: 'var(--surface)',
+                borderTop: `1px solid ${color}20`, borderRight: `1px solid ${color}20`,
+                borderBottom: `1px solid ${color}20`, borderLeft: `3px solid ${color}`,
+                borderRadius: 'var(--radius)', padding: '16px',
+                display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap',
+              }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: 8, flexShrink: 0,
+                  background: `${color}12`, border: `2px solid ${color}40`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span style={{ fontFamily: 'var(--crimson)', fontSize: n.numero > 999 ? 14 : 28, color, lineHeight: 1 }}>
+                    {n.numero.toLocaleString('es-CO')}
+                  </span>
                 </div>
 
-                {isOpen && (
-                  <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border)' }}>
-                    {/* Contexto bíblico */}
-                    <div onClick={() => n.libro_id && navigate(`/biblia/leer/${n.libro_id}/${n.cap_num}`)}
-                      style={{ padding: '12px 14px', background: `${color}08`, border: `1px solid ${color}20`, borderRadius: 4, cursor: n.libro_id ? 'pointer' : 'default', margin: '12px 0' }}>
-                      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color, marginBottom: 6 }}>
-                        {n.libro} {n.capitulo}:{n.versiculo} {n.libro_id ? '— ir al texto →' : ''}
-                      </div>
-                      <p style={{ fontFamily: 'var(--crimson)', fontSize: 15, color: 'var(--text)', lineHeight: 1.7, margin: 0, fontStyle: 'italic' }}>
-                        "{n.contexto}"
-                      </p>
-                    </div>
-
-                    {/* Apariciones del número en la Biblia */}
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.06em', marginTop: 8 }}>
-                      Para ver todas las apariciones de este número, usa el{' '}
-                      <span
-                        onClick={() => navigate('/biblia/patrones')}
-                        style={{ color, cursor: 'pointer', textDecoration: 'underline' }}
-                      >
-                        módulo de Patrones
-                      </span>
-                      {' '}y busca "{n.nombre.toLowerCase()}".
-                    </div>
+                <div style={{ flex: 1, minWidth: 160 }}>
+                  <div style={{ fontFamily: 'var(--crimson)', fontSize: 16, color: 'var(--text)', marginBottom: 4 }}>
+                    {n.significado}
                   </div>
-                )}
+                  {n.cita && (
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)' }}>
+                      <VersiculoLink cita={n.cita} />
+                    </div>
+                  )}
+                </div>
+
+                <BotonPreguntarIA tipo="numero" datos={n} color={color} />
               </div>
             )
           })}

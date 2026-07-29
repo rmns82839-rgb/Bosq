@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { getTitulosMesias } from '../lib/db.js'
+import { VersiculoLink } from '../lib/bibliaLink'
+import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 
 const CATEGORIAS = {
   divino:     { color: '#C9A84C', icon: '✦', label: 'Naturaleza Divina' },
@@ -8,25 +9,25 @@ const CATEGORIAS = {
   real:       { color: '#60A5FA', icon: '👑', label: 'Títulos Reales' },
   sacerdotal: { color: '#A78BFA', icon: '🕊️', label: 'Títulos Sacerdotales' },
   redentor:   { color: '#34D399', icon: '✝️', label: 'Títulos Redentores' },
-  pastor:     { color: '#6AAF7E', icon: '🐑', label: 'Títulos de Pastor' },
+  sacrificial:{ color: '#E07070', icon: '🐑', label: 'Títulos Sacrificiales' },
+  pastoral:   { color: '#6AAF7E', icon: '🐑', label: 'Títulos de Pastor' },
+  sustento:   { color: '#7EB8D4', icon: '🍞', label: 'Sustento' },
+  salvífico:  { color: '#34D399', icon: '✝️', label: 'Salvíficos' },
 }
 
 export default function Cristologia() {
-  const [titulos, setTitulos]       = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [filtrocat, setFiltrocat]   = useState('todos')
-  const [busqueda, setBusqueda]     = useState('')
-  const [seleccionado, setSeleccionado] = useState(null)
-  const navigate = useNavigate()
+  const [titulos, setTitulos] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filtrocat, setFiltrocat] = useState('todos')
+  const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
     getTitulosMesias().then(d => { setTitulos(d); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
   const filtrados = titulos.filter(t => {
-    const matchCat  = filtrocat === 'todos' || t.categoria === filtrocat
-    const matchBusq = !busqueda || t.titulo.toLowerCase().includes(busqueda.toLowerCase()) ||
-                      t.contexto?.toLowerCase().includes(busqueda.toLowerCase())
+    const matchCat = filtrocat === 'todos' || t.categoria === filtrocat
+    const matchBusq = !busqueda || t.titulo.toLowerCase().includes(busqueda.toLowerCase())
     return matchCat && matchBusq
   })
 
@@ -40,11 +41,10 @@ export default function Cristologia() {
           Cristología Bíblica
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-          Todos los nombres y títulos de Jesucristo en la Biblia — cada uno tomado directamente del texto RV1960
+          Nombres y títulos de Jesucristo en la Biblia — toca "Preguntar a la IA" en cualquiera para su contexto completo
         </p>
       </div>
 
-      {/* Filtros */}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
         <input
           style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '8px 14px', borderRadius: 'var(--radius)', outline: 'none', minWidth: 180 }}
@@ -59,12 +59,14 @@ export default function Cristologia() {
           color: filtrocat === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
         }}>Todos ({titulos.length})</button>
         {Object.entries(CATEGORIAS).map(([key, info]) => (
-          <button key={key} onClick={() => setFiltrocat(key)} style={{
-            fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
-            border: `1px solid ${filtrocat === key ? info.color : 'var(--border2)'}`,
-            background: filtrocat === key ? `${info.color}18` : 'none',
-            color: filtrocat === key ? info.color : 'var(--text-muted)', cursor: 'pointer',
-          }}>{info.icon} {info.label} ({contarCat(key)})</button>
+          contarCat(key) > 0 && (
+            <button key={key} onClick={() => setFiltrocat(key)} style={{
+              fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
+              border: `1px solid ${filtrocat === key ? info.color : 'var(--border2)'}`,
+              background: filtrocat === key ? `${info.color}18` : 'none',
+              color: filtrocat === key ? info.color : 'var(--text-muted)', cursor: 'pointer',
+            }}>{info.icon} {info.label} ({contarCat(key)})</button>
+          )
         ))}
       </div>
 
@@ -74,54 +76,41 @@ export default function Cristologia() {
 
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 
-      {/* Grid de tarjetas */}
       {!loading && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-          {filtrados.map((t, i) => {
+          {filtrados.map((t) => {
             const info = CATEGORIAS[t.categoria] || { color: 'var(--gold)', icon: '✦', label: t.categoria }
-            const isOpen = seleccionado === i
             return (
-              <div key={i}
-                style={{ background: 'var(--surface)', border: `1px solid ${isOpen ? info.color : info.color + '25'}`, borderTop: `3px solid ${info.color}`, borderRadius: 'var(--radius)', overflow: 'hidden', transition: 'border-color 0.2s' }}
-              >
-                <div onClick={() => setSeleccionado(isOpen ? null : i)} style={{ padding: '16px', cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
-                    <span style={{ fontSize: 20 }}>{info.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: 'var(--crimson)', fontSize: 17, color: info.color, lineHeight: 1.2, marginBottom: 4 }}>
-                        {t.titulo}
-                      </div>
-                      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)' }}>
-                        {t.libro} {t.capitulo}:{t.versiculo}
-                      </div>
+              <div key={t.id} style={{
+                background: 'var(--surface)',
+                borderTop: `3px solid ${info.color}`,
+                borderRight: `1px solid ${info.color}25`,
+                borderBottom: `1px solid ${info.color}25`,
+                borderLeft: `1px solid ${info.color}25`,
+                borderRadius: 'var(--radius)',
+                padding: '16px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                  <span style={{ fontSize: 20 }}>{info.icon}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'var(--crimson)', fontSize: 17, color: info.color, lineHeight: 1.2, marginBottom: 4 }}>
+                      {t.titulo}
                     </div>
-                  </div>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0, fontStyle: 'italic', borderLeft: `2px solid ${info.color}40`, paddingLeft: 8 }}>
-                    "{t.contexto?.substring(0, 100)}{t.contexto?.length > 100 ? '...' : ''}"
-                  </p>
-                </div>
-
-                {isOpen && (
-                  <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border)' }}>
-                    <p style={{ fontFamily: 'var(--crimson)', fontSize: 15, color: 'var(--text)', lineHeight: 1.7, margin: '12px 0', fontStyle: 'italic' }}>
-                      "{t.contexto}"
-                    </p>
-                    {t.texto_versiculo && t.texto_versiculo !== t.contexto && (
-                      <div onClick={() => navigate(`/biblia/leer/${t.libro_id}/${t.cap_num}`)}
-                        style={{ padding: '10px 12px', background: `${info.color}08`, border: `1px solid ${info.color}20`, borderRadius: 4, cursor: 'pointer' }}>
-                        <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: info.color, marginBottom: 4 }}>
-                          {t.libro} {t.capitulo}:{t.versiculo} — ir al texto completo →
-                        </div>
-                        <p style={{ fontFamily: 'var(--crimson)', fontSize: 13, color: 'var(--text-dim)', lineHeight: 1.6, margin: 0 }}>
-                          {t.texto_versiculo?.substring(0, 160)}...
-                        </p>
+                    {t.cita && (
+                      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)' }}>
+                        <VersiculoLink cita={t.cita} />
                       </div>
                     )}
-                    <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: info.color, background: `${info.color}15`, border: `1px solid ${info.color}30`, borderRadius: 3, padding: '3px 8px', display: 'inline-block', marginTop: 10 }}>
-                      {info.label}
-                    </span>
                   </div>
+                </div>
+
+                {t.descripcion && (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 10px', fontStyle: 'italic' }}>
+                    {t.descripcion}
+                  </p>
                 )}
+
+                <BotonPreguntarIA tipo="titulo" datos={t} color={info.color} />
               </div>
             )
           })}

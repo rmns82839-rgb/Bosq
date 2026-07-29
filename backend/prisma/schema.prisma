@@ -38,12 +38,8 @@ model Bosquejo {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// MÓDULOS DE ESTUDIO BÍBLICO (Angelología, Cristología, Numerología,
-// Reyes, Profecías, Juicios, Palabras de Jesús, Espíritu Santo)
-// Cada tabla guarda solo la CITA ("Juan 1:29"), nunca el texto del
-// versículo — el texto se abre en YouVersion vía VersiculoLink,
-// igual que en los bosquejos. Así se evita el problema de derechos
-// de autor de guardar la RVR1960 completa.
+// MÓDULOS DE ESTUDIO BÍBLICO — solo guardan la CITA, nunca el texto
+// del versículo (VersiculoLink abre YouVersion para eso).
 // ═══════════════════════════════════════════════════════════════
 
 model Angel {
@@ -72,6 +68,7 @@ model NumeroBiblico {
   id          String   @id @default(cuid())
   numero      Int
   significado String
+  categoria   String?
   cita        String?
   descripcion String?
   createdAt   DateTime @default(now())
@@ -132,4 +129,17 @@ model EspirituSanto {
   createdAt   DateTime @default(now())
 
   @@map("espiritu_santo")
+}
+
+model JesusEnLibro {
+  id          String   @id @default(cuid())
+  libro       String
+  orden       Int
+  testamento  String
+  titulo      String
+  cita        String?
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  @@map("jesus_en_libros")
 }

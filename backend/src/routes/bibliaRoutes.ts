@@ -14,6 +14,7 @@ import {
   getDonesEspiritu,
   getFrutoEspiritu,
   getEspirituPorLibro,
+  getJesusEnLibros,
 } from '../controllers/bibliaEstudiosController';
 import { authMiddleware } from '../middleware/auth';
 
@@ -24,7 +25,7 @@ router.use(authMiddleware);
 router.get('/buscar/*', buscarVersiculo);
 router.get('/random', versiculoAleatorio);
 
-// Módulos de estudio (reconstruidos — guardan solo la cita, no el texto)
+// Módulos de estudio
 router.get('/angeles', getAngeles);
 router.get('/titulos-mesias', getTitulosMesias);
 router.get('/numeros-biblicos', getNumerosBiblicos);
@@ -38,5 +39,6 @@ router.get('/simbolos-espiritu', getSimbolosEspiritu);
 router.get('/dones-espiritu', getDonesEspiritu);
 router.get('/fruto-espiritu', getFrutoEspiritu);
 router.get('/espiritu-por-libro', getEspirituPorLibro);
+router.get('/jesus-en-libros', getJesusEnLibros);
 
 export default router;

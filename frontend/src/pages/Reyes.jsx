@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getReyes } from '../lib/db.js'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
+import LineaTiempoReyes from '../components/reyes/LineaTiempoReyes'
 
 const C = { 'Israel unido': '#C9A84C', 'Judá': '#60A5FA', 'Israel': '#34D399' }
 const CE = { bueno: '#34D399', malo: '#F87171', mixto: '#FBBF24' }
@@ -11,6 +12,7 @@ export default function Reyes() {
   const [reyes, setReyes] = useState([])
   const [loading, setLoading] = useState(true)
   const [filtroReino, setFiltroReino] = useState('todos')
+  const [vista, setVista] = useState('lista')
 
   useEffect(() => {
     getReyes().then(d => { setReyes(d); setLoading(false) }).catch(() => setLoading(false))
@@ -31,6 +33,22 @@ export default function Reyes() {
         </p>
       </div>
 
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        <button onClick={() => setVista('lista')} style={{
+          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
+          border: `1px solid ${vista === 'lista' ? 'var(--gold)' : 'var(--border2)'}`,
+          background: vista === 'lista' ? 'var(--gold-glow)' : 'none',
+          color: vista === 'lista' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
+        }}>📋 Lista</button>
+        <button onClick={() => setVista('tiempo')} style={{
+          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
+          border: `1px solid ${vista === 'tiempo' ? 'var(--gold)' : 'var(--border2)'}`,
+          background: vista === 'tiempo' ? 'var(--gold-glow)' : 'none',
+          color: vista === 'tiempo' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
+        }}>📊 Línea de tiempo</button>
+      </div>
+
+      {vista === 'lista' && (
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
         <button onClick={() => setFiltroReino('todos')} style={{
           fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
@@ -47,10 +65,15 @@ export default function Reyes() {
           }}>{r} ({reyes.filter(x => x.reino === r).length})</button>
         ))}
       </div>
+      )}
 
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 
-      {!loading && (
+      {!loading && vista === 'tiempo' && (
+        <LineaTiempoReyes reyes={reyes} />
+      )}
+
+      {!loading && vista === 'lista' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtrados.map((rey) => {
             const color = C[rey.reino] || 'var(--gold)'

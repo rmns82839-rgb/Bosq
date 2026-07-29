@@ -55,6 +55,15 @@ const PREGUNTAS = {
     `Explícame en profundidad este aspecto del Espíritu Santo: "${d.titulo}" ` +
     `(categoría: ${d.categoria}). Dame: 1) contexto bíblico, 2) referencias ` +
     `relacionadas, 3) su relevancia teológica y práctica. Cita: ${d.cita || 'no especificada'}.`,
+
+  jesus_libro: (d) =>
+    `En la tradición devocional de "Cristo en cada libro de la Biblia", el libro de ` +
+    `"${d.libro}" se asocia con el título "${d.titulo}" (cita representativa: ` +
+    `${d.cita || 'no especificada'}). Explícame en profundidad por qué se hace esta ` +
+    `asociación: 1) el argumento o tema central del libro, 2) cómo ese título o imagen ` +
+    `de Cristo se conecta con el contenido del libro, 3) otros pasajes del mismo libro ` +
+    `que refuercen esa conexión, 4) una aclaración honesta de si es una tipología ` +
+    `ampliamente reconocida o una asociación más tradicional/homilética.`,
 }
 
 export default function BotonPreguntarIA({ tipo, datos, etiqueta = '🤖 Preguntar a la IA', color }) {

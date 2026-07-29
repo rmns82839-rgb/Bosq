@@ -6,6 +6,7 @@ import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 const CATEGORIA_COLOR = {
   divino: '#C9A84C', humano: '#FB923C', gobierno: '#818CF8',
   prueba: '#F87171', escatológico: '#F87171', creación: '#34D399',
+  legal: '#60A5FA', gracia: '#A78BFA', nuevo_comienzo: '#7EB8D4', profético: '#FB923C',
 }
 
 export default function Numerologia() {

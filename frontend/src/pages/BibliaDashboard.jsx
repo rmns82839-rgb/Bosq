@@ -8,6 +8,7 @@ const modulos = [
   { titulo: 'Cristología', descripcion: 'Estudio de Jesucristo en las Escrituras', emoji: '✝️', ruta: '/biblia/cristologia' },
   { titulo: 'Numerología', descripcion: 'Significado de los números bíblicos', emoji: '🔢', ruta: '/biblia/numerologia' },
   { titulo: 'Neumatología', descripcion: 'El Espíritu Santo en la Biblia', emoji: '🕊️', ruta: '/biblia/neumatologia' },
+  { titulo: 'Jesús en Cada Libro', descripcion: 'Cómo se anticipa o se revela a Cristo en los 66 libros', emoji: '🗝️', ruta: '/biblia/jesus-en-libros' },
   { titulo: 'Reyes de Israel', descripcion: 'Timeline paralelo de reyes de Israel y Judá', emoji: '👑', ruta: '/biblia/reyes' },
   { titulo: 'Estudios Especiales', descripcion: 'Palabras de Jesús, profecías y juicios', emoji: '⭐', ruta: '/biblia/especiales' },
   { titulo: 'Patrones Bíblicos', descripcion: 'Frecuencia de palabras y patrones en la Biblia', emoji: '📊', ruta: '/biblia/patrones' },

@@ -273,3 +273,15 @@ export async function getReyes() {
     return [];
   }
 }
+// Agregar esta funciÃ³n a frontend/src/lib/db.js
+// (junto a getReyes, getAngeles, etc. â€” mismo patrÃ³n, mismo `api`)
+
+export async function getJesusEnLibros() {
+  try {
+    const response = await api.get('/biblia/jesus-en-libros');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching jesus en libros:', error);
+    return [];
+  }
+}

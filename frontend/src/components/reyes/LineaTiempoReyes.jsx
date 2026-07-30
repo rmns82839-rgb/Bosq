@@ -42,7 +42,7 @@ function asignarCarriles(reyes) {
   return { reyes: conCarril, totalCarriles: Math.max(1, finDeCadaCarril.length) }
 }
 
-function BloqueRey({ rey, izquierda, ancho, seleccionado, onSeleccionar }) {
+function BloqueRey({ rey, izquierda, ancho, capa, seleccionado, onSeleccionar }) {
   const [hover, setHover] = useState(false)
   const ec = CE[rey.evaluacion] || '#F59E0B'
   const alto = altoPx(rey.inicioAc, rey.finAc)
@@ -54,43 +54,43 @@ function BloqueRey({ rey, izquierda, ancho, seleccionado, onSeleccionar }) {
       onClick={() => onSeleccionar(abierto ? null : rey)}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      onTouchStart={() => setHover(true)}
-      onTouchEnd={() => setHover(false)}
       title={`${rey.nombre} (${rey.inicioAc}–${rey.finAc} a.C.)`}
       style={{
         position: 'absolute',
         top: topPx(rey.inicioAc),
         left: `${izquierda}%`,
-        // Al pasar el mouse (o tocar), se ensancha por encima de los
-        // vecinos sin mover nada del layout — solo mientras dura el hover.
-        width: hover ? `max(${ancho}%, 150px)` : `${ancho}%`,
+        width: `${ancho}%`,
         minHeight: alto,
         background: `linear-gradient(135deg, ${ec}${destacado ? '45' : '30'}, ${ec}10)`,
         backdropFilter: 'blur(4px)',
-        border: `2px solid ${ec}${destacado ? 'd0' : '80'}`,
+        borderTop: `2px solid ${ec}${destacado ? 'd0' : '80'}`,
+        borderRight: `2px solid ${ec}${destacado ? 'd0' : '80'}`,
+        borderBottom: `2px solid ${ec}${destacado ? 'd0' : '80'}`,
         borderLeft: `4px solid ${ec}`,
         borderRadius: 8,
         cursor: 'pointer',
-        overflow: hover ? 'visible' : 'hidden',
+        overflow: 'hidden',
         padding: '4px 8px',
         boxSizing: 'border-box',
-        zIndex: hover ? 30 : abierto ? 10 : 1,
+        // Capas más altas (reyes co-reinando corridos a la derecha) van
+        // por encima, para que su zona de toque quede siempre accesible.
+        zIndex: (capa || 0) * 2 + (destacado ? 1 : 0) + 1,
         boxShadow: destacado
-          ? `0 0 30px ${ec}70, inset 0 0 20px ${ec}30`
-          : `0 4px 12px rgba(0,0,0,0.2), inset 0 1px 0 ${ec}40`,
-        transition: 'box-shadow 0.2s, border-color 0.2s, background 0.2s, width 0.15s',
-        transform: abierto && !hover ? 'scale(1.02)' : 'scale(1)',
+          ? `0 0 24px ${ec}70, inset 0 0 16px ${ec}30`
+          : `0 4px 12px rgba(0,0,0,0.25), inset 0 1px 0 ${ec}40`,
+        transition: 'box-shadow 0.2s, border-color 0.2s, background 0.2s',
+        transform: destacado ? 'scale(1.02)' : 'scale(1)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: '100%' }}>
         <span style={{
           fontFamily: 'var(--mono)', fontSize: 8.5, fontWeight: 500, color: '#fff',
           textShadow: '0 1px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap',
-          overflow: hover ? 'visible' : 'hidden', textOverflow: 'ellipsis', lineHeight: '16px',
+          overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '16px',
         }}>
           {rey.nombre}
         </span>
-        {(alto > 30 || hover) && (
+        {alto > 30 && (
           <span style={{
             fontFamily: 'var(--mono)', fontSize: 7, color: 'rgba(255,255,255,0.7)',
             whiteSpace: 'nowrap', marginLeft: 'auto', textShadow: '0 1px 2px rgba(0,0,0,0.3)',
@@ -167,16 +167,25 @@ function ColumnaReino({ reyes, colorEtiqueta, titulo }) {
           {titulo}
         </span>
       </div>
-      {conCarril.map((rey) => (
-        <BloqueRey
-          key={rey.id}
-          rey={rey}
-          izquierda={(rey.carril / totalCarriles) * 100}
-          ancho={(1 / totalCarriles) * 100 - 2}
-          seleccionado={rey.__sel}
-          onSeleccionar={rey.__onSel}
-        />
-      ))}
+      {conCarril.map((rey) => {
+        // En vez de dividir el ancho entre carriles (bloques angostos,
+        // difíciles de tocar en el celular), cada carril se ESCALONA:
+        // se corre un poco a la derecha pero conserva casi todo su ancho.
+        // Los reyes que se traslapan se ven como una escalera, no como
+        // columnas apretadas — y siempre queda una zona amplia para tocar.
+        const corrimiento = rey.carril * 10 // % que se corre cada carril extra
+        return (
+          <BloqueRey
+            key={rey.id}
+            rey={rey}
+            izquierda={corrimiento}
+            ancho={98 - corrimiento}
+            capa={rey.carril}
+            seleccionado={rey.__sel}
+            onSeleccionar={rey.__onSel}
+          />
+        )
+      })}
     </div>
   )
 }

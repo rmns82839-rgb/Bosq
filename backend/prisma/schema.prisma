@@ -132,14 +132,15 @@ model EspirituSanto {
 }
 
 model JesusEnLibro {
-  id          String   @id @default(cuid())
-  libro       String
-  orden       Int
-  testamento  String
-  titulo      String
-  cita        String?
-  descripcion String?
-  createdAt   DateTime @default(now())
+  id                   String   @id @default(cuid())
+  libro                String
+  orden                Int
+  testamento           String
+  titulo               String
+  cita                 String?
+  descripcion          String?
+  referenciasAdicionales Json   @default("[]")
+  createdAt            DateTime @default(now())
 
   @@map("jesus_en_libros")
 }

@@ -10,36 +10,38 @@ const FIN_EJE = 586            // a.C. — extremo derecho (caída de Judá)
 const ANIO_DIVISION = 930      // división del reino
 const ANIO_CAIDA_ISRAEL = 722  // Israel cae ante Asiria
 const PX_POR_ANIO = 8
-const ANCHO_TOTAL = (INICIO_EJE - FIN_EJE) * PX_POR_ANIO
+// Ancho mínimo donde cabe un nombre. Sin esto, reyes como Zimri (7 días)
+// o Ocozías (1 año) quedaban en barras de 0-8px, con el nombre cortado.
+const ANCHO_MIN = 76
+const SEPARACION = 5           // aire entre barras del mismo carril
+const ANCHO_TOTAL = (INICIO_EJE - FIN_EJE) * PX_POR_ANIO + ANCHO_MIN
 const ALTURA_CARRIL = 46
-const ANCHO_ETIQUETA = 92      // franja izquierda fija con el nombre del reino
 
 // En a.C. los números DECRECEN con el tiempo: 1050 es antes que 930.
-// 1050 → 0px, 930 → 960px, 586 → 3712px
 const leftPx = (anio) => (INICIO_EJE - anio) * PX_POR_ANIO
-const anchoPx = (inicioAc, finAc) => Math.max(34, (inicioAc - finAc) * PX_POR_ANIO)
+const anchoPx = (inicioAc, finAc) => Math.max(ANCHO_MIN, (inicioAc - finAc) * PX_POR_ANIO)
 
-/** Asigna carriles a reinados que se traslapan (co-reinados), para que
- * se apilen en filas dentro de su reino en vez de superponerse. */
+/** Asigna carriles comparando POSICIONES EN PÍXELES, no años.
+ * Así, si dos barras cortas quedan pegadas por el ancho mínimo, se
+ * apilan en carriles distintos en vez de taparse entre sí. */
 function asignarCarriles(reyes) {
-  // Orden cronológico real: número mayor = más antiguo.
   const ordenados = [...reyes].sort((a, b) => b.inicioAc - a.inicioAc)
-  const finPorCarril = []
+  const finPxPorCarril = []
   const conCarril = []
 
   for (const rey of ordenados) {
-    // Un carril queda libre si su último rey ya terminó — y como los
-    // números bajan con el tiempo, "ya terminó" es finAc >= inicioAc nuevo.
-    let carril = finPorCarril.findIndex((fin) => fin >= rey.inicioAc)
+    const iniPx = leftPx(rey.inicioAc)
+    const finPx = iniPx + anchoPx(rey.inicioAc, rey.finAc)
+    let carril = finPxPorCarril.findIndex((fin) => fin + SEPARACION <= iniPx)
     if (carril === -1) {
-      carril = finPorCarril.length
-      finPorCarril.push(rey.finAc)
+      carril = finPxPorCarril.length
+      finPxPorCarril.push(finPx)
     } else {
-      finPorCarril[carril] = rey.finAc
+      finPxPorCarril[carril] = finPx
     }
     conCarril.push({ ...rey, carril })
   }
-  return { reyes: conCarril, totalCarriles: Math.max(1, finPorCarril.length) }
+  return { reyes: conCarril, totalCarriles: Math.max(1, finPxPorCarril.length) }
 }
 
 /* ── Un rey: barra horizontal, ancho = años de reinado ──────────── */
@@ -50,7 +52,6 @@ function BloqueRey({ rey, visible, seleccionado, onSeleccionar }) {
   const duracion = rey.inicioAc - rey.finAc
   const abierto = seleccionado?.id === rey.id
   const destacado = hover || abierto
-
   const bordeColor = `${ec}${destacado ? 'd0' : '80'}`
 
   return (
@@ -93,76 +94,82 @@ function BloqueRey({ rey, visible, seleccionado, onSeleccionar }) {
         }}>
           {rey.nombre}
         </span>
-        {ancho > 90 && (
-          <span style={{
-            fontFamily: 'var(--mono)', fontSize: 7, color: 'rgba(255,255,255,0.55)',
-            whiteSpace: 'nowrap', lineHeight: '10px',
-          }}>
-            {rey.inicioAc}–{rey.finAc} · {duracion} {duracion === 1 ? 'año' : 'años'}
-          </span>
-        )}
+        <span style={{
+          fontFamily: 'var(--mono)', fontSize: 7, color: 'rgba(255,255,255,0.55)',
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '10px',
+        }}>
+          {ancho > 118
+            ? `${rey.inicioAc}–${rey.finAc} · ${duracion} ${duracion === 1 ? 'año' : 'años'}`
+            : `${rey.inicioAc}–${rey.finAc}`}
+        </span>
       </div>
     </div>
   )
 }
 
-/* ── Una franja por reino, con su etiqueta fija a la izquierda ──── */
+/* ── Una franja por reino ───────────────────────────────────────
+   El rótulo va en su PROPIA línea, encima de las barras — antes
+   flotaba sobre ellas y tapaba a los reyes del extremo izquierdo
+   (Saúl) y a cualquiera que pasara por debajo al hacer scroll. */
 function FilaReino({ titulo, color, reyes, revelados, seleccionado, onSeleccionar }) {
   const { reyes: conCarril, totalCarriles } = useMemo(() => asignarCarriles(reyes), [reyes])
   if (reyes.length === 0) return null
 
-  const alturaFila = totalCarriles * ALTURA_CARRIL + 8
+  const alturaBarras = totalCarriles * ALTURA_CARRIL + 6
+  const inicioReino = Math.max(...reyes.map((r) => r.inicioAc))
+  const finReino = Math.min(...reyes.map((r) => r.finAc))
 
   return (
-    <div style={{ position: 'relative', height: alturaFila, marginBottom: 10 }}>
-      {/* Fondo tenue de la franja, del ancho del período real del reino */}
+    <div style={{ marginBottom: 14 }}>
+      {/* Rótulo sticky: se queda pegado a la izquierda mientras deslizas,
+          pero en su propia línea — no se superpone a ninguna barra. */}
       <div style={{
-        position: 'absolute', top: 0, bottom: 0,
-        left: leftPx(Math.max(...reyes.map((r) => r.inicioAc))),
-        width: anchoPx(Math.max(...reyes.map((r) => r.inicioAc)), Math.min(...reyes.map((r) => r.finAc))),
-        background: `linear-gradient(180deg, ${color}0a, transparent)`,
-        borderRadius: 8,
-      }} />
-
-      {/* Etiqueta del reino — sticky: se queda visible mientras haces
-          scroll horizontal, así siempre sabes qué franja estás viendo. */}
-      <div style={{
-        position: 'sticky', left: 0, zIndex: 25, float: 'left',
-        width: ANCHO_ETIQUETA, height: '100%',
-        display: 'flex', alignItems: 'center', paddingLeft: 4,
-        background: 'linear-gradient(to right, rgba(5,5,15,0.96) 70%, transparent)',
-        pointerEvents: 'none',
+        position: 'sticky', left: 0, zIndex: 30,
+        width: 'fit-content', marginBottom: 5,
       }}>
         <span style={{
-          fontFamily: 'var(--mono)', fontSize: 8, color, letterSpacing: '0.08em',
+          fontFamily: 'var(--mono)', fontSize: 8, color, letterSpacing: '0.09em',
           textTransform: 'uppercase', fontWeight: 700,
-          background: `${color}1a`, padding: '3px 8px', borderRadius: 10,
-          border: `1px solid ${color}40`, whiteSpace: 'nowrap',
+          background: `${color}1f`, padding: '4px 12px', borderRadius: 12,
+          border: `1px solid ${color}4d`, whiteSpace: 'nowrap',
+          backdropFilter: 'blur(6px)',
         }}>
           {titulo}
         </span>
       </div>
 
-      {conCarril.map((rey) => (
-        <BloqueRey
-          key={rey.id}
-          rey={rey}
-          visible={revelados.has(rey.id)}
-          seleccionado={seleccionado}
-          onSeleccionar={onSeleccionar}
-        />
-      ))}
+      <div style={{ position: 'relative', height: alturaBarras }}>
+        {/* Fondo tenue del período real del reino */}
+        <div style={{
+          position: 'absolute', top: 0, bottom: 0,
+          left: leftPx(inicioReino),
+          width: anchoPx(inicioReino, finReino),
+          background: `linear-gradient(180deg, ${color}0a, transparent)`,
+          borderRadius: 8,
+          zIndex: 0,
+        }} />
+
+        {conCarril.map((rey) => (
+          <BloqueRey
+            key={rey.id}
+            rey={rey}
+            visible={revelados.has(rey.id)}
+            seleccionado={seleccionado}
+            onSeleccionar={onSeleccionar}
+          />
+        ))}
+      </div>
     </div>
   )
 }
 
-/* ── Regla de años, arriba del todo ─────────────────────────────── */
+/* ── Regla de años ──────────────────────────────────────────────── */
 function ReglaAnios() {
   const marcas = []
   for (let anio = INICIO_EJE; anio >= FIN_EJE; anio -= 25) marcas.push(anio)
 
   return (
-    <div style={{ position: 'relative', height: 26, width: ANCHO_TOTAL, marginBottom: 6 }}>
+    <div style={{ position: 'relative', height: 26, width: ANCHO_TOTAL, marginBottom: 8 }}>
       {marcas.map((anio) => {
         const principal = anio % 50 === 0
         return (
@@ -190,9 +197,8 @@ function ReglaAnios() {
   )
 }
 
-/* ── Encabezado con efecto parallax: cambia al cruzar la división ── */
+/* ── Encabezado con parallax al cruzar la división ──────────────── */
 function EncabezadoParallax({ fraccion }) {
-  // fraccion: 0 = extremo izquierdo (1050 a.C.), 1 = extremo derecho (586 a.C.)
   const fraccionDivision = (INICIO_EJE - ANIO_DIVISION) / (INICIO_EJE - FIN_EJE)
   const cerca = Math.min(1, Math.max(0, (fraccion - fraccionDivision + 0.06) / 0.12))
   const unido = 1 - cerca
@@ -240,9 +246,6 @@ export default function LineaTiempoReyes({ reyes }) {
   const juda = useMemo(() => reyes.filter((r) => r.reino === 'Judá'), [reyes])
   const israel = useMemo(() => reyes.filter((r) => r.reino === 'Israel'), [reyes])
 
-  /** Lee el scroll REAL del contenedor (no window.scrollX — el scroll
-   * ocurre dentro del div con overflowX). De ahí sale tanto el parallax
-   * del encabezado como el revelado progresivo de cada rey. */
   const onScroll = useCallback((e) => {
     const el = e.currentTarget
     if (rafRef.current) return
@@ -251,8 +254,6 @@ export default function LineaTiempoReyes({ reyes }) {
       const maxScroll = Math.max(1, el.scrollWidth - el.clientWidth)
       setFraccion(el.scrollLeft / maxScroll)
 
-      // Revela los reyes cuyo tramo ya entró en la ventana visible.
-      // Una vez revelados, se quedan visibles (no se vuelven a ocultar).
       const desde = el.scrollLeft - 120
       const hasta = el.scrollLeft + el.clientWidth + 120
       setRevelados((prev) => {
@@ -272,7 +273,6 @@ export default function LineaTiempoReyes({ reyes }) {
     })
   }, [reyes])
 
-  // Revela lo que ya está a la vista al montar (sin esperar el primer scroll).
   const inicializar = useCallback((el) => {
     scrollRef.current = el
     if (!el || reyes.length === 0) return
@@ -294,7 +294,6 @@ export default function LineaTiempoReyes({ reyes }) {
         border: '1px solid rgba(255,255,255,0.06)',
         boxShadow: '0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05)',
       }}>
-        {/* Título + leyenda */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
           <div>
             <span style={{ fontFamily: 'var(--crimson)', fontSize: 18, color: '#fff', fontWeight: 700, letterSpacing: '0.04em' }}>
@@ -313,7 +312,6 @@ export default function LineaTiempoReyes({ reyes }) {
 
         <EncabezadoParallax fraccion={fraccion} />
 
-        {/* Contenedor con scroll horizontal — aquí ocurre todo el scroll */}
         <div
           ref={inicializar}
           onScroll={onScroll}
@@ -322,15 +320,14 @@ export default function LineaTiempoReyes({ reyes }) {
           <div style={{ minWidth: ANCHO_TOTAL, position: 'relative' }}>
             <ReglaAnios />
 
-            {/* Marcas verticales de eventos clave */}
             <div style={{
               position: 'absolute', left: leftPx(ANIO_DIVISION), top: 26, bottom: 0,
               width: 2, background: 'linear-gradient(to bottom, rgba(255,215,0,0.5), rgba(255,215,0,0.1))',
-              zIndex: 1,
+              zIndex: 1, pointerEvents: 'none',
             }} />
             <div style={{
               position: 'absolute', left: leftPx(ANIO_CAIDA_ISRAEL), top: 26, bottom: 0,
-              width: 1, background: 'rgba(239,68,68,0.35)', zIndex: 1,
+              width: 1, background: 'rgba(239,68,68,0.35)', zIndex: 1, pointerEvents: 'none',
             }} />
 
             <FilaReino titulo="Reino Unido" color="#F59E0B" reyes={unidos} revelados={revelados} seleccionado={seleccionado} onSeleccionar={setSeleccionado} />
@@ -339,7 +336,6 @@ export default function LineaTiempoReyes({ reyes }) {
           </div>
         </div>
 
-        {/* Barra de progreso del recorrido */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
           <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
             <div style={{
@@ -358,7 +354,6 @@ export default function LineaTiempoReyes({ reyes }) {
         </p>
       </div>
 
-      {/* Panel flotante del rey seleccionado */}
       {seleccionado && (
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,

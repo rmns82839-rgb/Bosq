@@ -1,25 +1,36 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import Modal from '../common/Modal';
 
 /**
- * Campo de texto largo (Gancho, Conexión, desarrollo de un punto,
- * Aplicación, Resumen, Llamado…) con un botón para insertar notas
- * sueltas en cualquier lugar del texto, mientras escribes.
+ * Superficie de escritura sin caja: crece hacia abajo con el contenido,
+ * nunca tiene scroll interno (así siempre ves todo lo que escribiste,
+ * desde la primera línea). Incluye el botón para insertar notas en
+ * cualquier punto del texto.
  *
  * La nota queda incrustada en el mismo texto como ⟦contenido⟧. En el
  * bosquejo final eso se convierte en un pequeño 📝 justo en ese punto.
  */
-export default function CampoTexto({ value, onChange, placeholder, minRows = 2 }) {
+export default function CampoTexto({ value, onChange, placeholder, minRows = 2, className = '' }) {
   const taRef = useRef(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [borrador, setBorrador] = useState('');
 
-  useEffect(() => {
+  // Ajusta la altura al contenido real. Se llama al escribir, al montar,
+  // y cuando cambia el ancho de la ventana (porque al refluir el texto
+  // cambia el número de líneas).
+  const ajustar = useCallback(() => {
     const el = taRef.current;
     if (!el) return;
     el.style.height = 'auto';
     el.style.height = `${el.scrollHeight}px`;
-  }, [value]);
+  }, []);
+
+  useEffect(() => { ajustar(); }, [value, ajustar]);
+
+  useEffect(() => {
+    window.addEventListener('resize', ajustar);
+    return () => window.removeEventListener('resize', ajustar);
+  }, [ajustar]);
 
   const abrirModal = () => {
     setBorrador('');
@@ -52,7 +63,7 @@ export default function CampoTexto({ value, onChange, placeholder, minRows = 2 }
         value={value || ''}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        className="be-textarea"
+        className={`be-texto-libre ${className}`}
       />
       <button type="button" className="be-btn-insertar-nota" onClick={abrirModal}>
         📝 + Nota aquí

@@ -1,53 +1,57 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import { VersiculoLink } from '../../lib/bibliaLink'
 import BotonPreguntarIA from '../common/BotonPreguntarIA'
 
 const CE = { bueno: '#10B981', malo: '#EF4444', mixto: '#F59E0B' }
 const IE = { bueno: '👑', malo: '⚔️', mixto: '📜' }
 
-const INICIO_EJE = 1050
-const FIN_EJE = 586
-const PX_POR_ANIO = 3.8
-const ALTURA_TOTAL = (INICIO_EJE - FIN_EJE) * PX_POR_ANIO
+const INICIO_EJE = 1050        // a.C. — extremo izquierdo
+const FIN_EJE = 586            // a.C. — extremo derecho (caída de Judá)
+const ANIO_DIVISION = 930      // división del reino
+const ANIO_CAIDA_ISRAEL = 722  // Israel cae ante Asiria
+const PX_POR_ANIO = 8
+const ANCHO_TOTAL = (INICIO_EJE - FIN_EJE) * PX_POR_ANIO
+const ALTURA_CARRIL = 46
+const ANCHO_ETIQUETA = 92      // franja izquierda fija con el nombre del reino
 
-// Todo bloque y toda marca se posicionan con ESTAS dos funciones, siempre
-// relativas al mismo origen (1050 a.C.) — ningún contenedor hijo debe
-// aplicar un desplazamiento propio, o los dos ejes se desincronizan.
-const topPx = (inicioAc) => (INICIO_EJE - inicioAc) * PX_POR_ANIO
-const altoPx = (inicioAc, finAc) => Math.max(32, (inicioAc - finAc) * PX_POR_ANIO)
+// En a.C. los números DECRECEN con el tiempo: 1050 es antes que 930.
+// 1050 → 0px, 930 → 960px, 586 → 3712px
+const leftPx = (anio) => (INICIO_EJE - anio) * PX_POR_ANIO
+const anchoPx = (inicioAc, finAc) => Math.max(34, (inicioAc - finAc) * PX_POR_ANIO)
 
-const marcasCada = (paso) => {
-  const marcas = []
-  for (let anio = INICIO_EJE; anio >= FIN_EJE; anio -= paso) marcas.push(anio)
-  return marcas
-}
-
-/** Asigna "carriles" a reinados que se traslapan (co-reinados), para que
- * se dibujen lado a lado en vez de taparse uno al otro. */
+/** Asigna carriles a reinados que se traslapan (co-reinados), para que
+ * se apilen en filas dentro de su reino en vez de superponerse. */
 function asignarCarriles(reyes) {
+  // Orden cronológico real: número mayor = más antiguo.
   const ordenados = [...reyes].sort((a, b) => b.inicioAc - a.inicioAc)
-  const finDeCadaCarril = []
+  const finPorCarril = []
   const conCarril = []
 
   for (const rey of ordenados) {
-    let carril = finDeCadaCarril.findIndex((fin) => fin >= rey.inicioAc)
+    // Un carril queda libre si su último rey ya terminó — y como los
+    // números bajan con el tiempo, "ya terminó" es finAc >= inicioAc nuevo.
+    let carril = finPorCarril.findIndex((fin) => fin >= rey.inicioAc)
     if (carril === -1) {
-      carril = finDeCadaCarril.length
-      finDeCadaCarril.push(rey.finAc)
+      carril = finPorCarril.length
+      finPorCarril.push(rey.finAc)
     } else {
-      finDeCadaCarril[carril] = rey.finAc
+      finPorCarril[carril] = rey.finAc
     }
     conCarril.push({ ...rey, carril })
   }
-  return { reyes: conCarril, totalCarriles: Math.max(1, finDeCadaCarril.length) }
+  return { reyes: conCarril, totalCarriles: Math.max(1, finPorCarril.length) }
 }
 
-function BloqueRey({ rey, izquierda, ancho, capa, seleccionado, onSeleccionar }) {
+/* ── Un rey: barra horizontal, ancho = años de reinado ──────────── */
+function BloqueRey({ rey, visible, seleccionado, onSeleccionar }) {
   const [hover, setHover] = useState(false)
   const ec = CE[rey.evaluacion] || '#F59E0B'
-  const alto = altoPx(rey.inicioAc, rey.finAc)
+  const ancho = anchoPx(rey.inicioAc, rey.finAc)
+  const duracion = rey.inicioAc - rey.finAc
   const abierto = seleccionado?.id === rey.id
   const destacado = hover || abierto
+
+  const bordeColor = `${ec}${destacado ? 'd0' : '80'}`
 
   return (
     <div
@@ -57,45 +61,44 @@ function BloqueRey({ rey, izquierda, ancho, capa, seleccionado, onSeleccionar })
       title={`${rey.nombre} (${rey.inicioAc}–${rey.finAc} a.C.)`}
       style={{
         position: 'absolute',
-        top: topPx(rey.inicioAc),
-        left: `${izquierda}%`,
-        width: `${ancho}%`,
-        minHeight: alto,
-        background: `linear-gradient(135deg, ${ec}${destacado ? '45' : '30'}, ${ec}10)`,
+        left: leftPx(rey.inicioAc),
+        top: rey.carril * ALTURA_CARRIL + 4,
+        width: ancho,
+        height: ALTURA_CARRIL - 10,
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateX(0)' : 'translateX(-16px)',
+        background: `linear-gradient(135deg, ${ec}${destacado ? '4d' : '2e'}, ${ec}0d)`,
         backdropFilter: 'blur(4px)',
-        borderTop: `2px solid ${ec}${destacado ? 'd0' : '80'}`,
-        borderRight: `2px solid ${ec}${destacado ? 'd0' : '80'}`,
-        borderBottom: `2px solid ${ec}${destacado ? 'd0' : '80'}`,
+        borderTop: `1px solid ${bordeColor}`,
+        borderRight: `1px solid ${bordeColor}`,
+        borderBottom: `1px solid ${bordeColor}`,
         borderLeft: `4px solid ${ec}`,
-        borderRadius: 8,
+        borderRadius: 6,
         cursor: 'pointer',
         overflow: 'hidden',
         padding: '4px 8px',
         boxSizing: 'border-box',
-        // Capas más altas (reyes co-reinando corridos a la derecha) van
-        // por encima, para que su zona de toque quede siempre accesible.
-        zIndex: (capa || 0) * 2 + (destacado ? 1 : 0) + 1,
+        zIndex: destacado ? 20 : 2,
         boxShadow: destacado
-          ? `0 0 24px ${ec}70, inset 0 0 16px ${ec}30`
-          : `0 4px 12px rgba(0,0,0,0.25), inset 0 1px 0 ${ec}40`,
-        transition: 'box-shadow 0.2s, border-color 0.2s, background 0.2s',
-        transform: destacado ? 'scale(1.02)' : 'scale(1)',
+          ? `0 0 22px ${ec}66, inset 0 0 14px ${ec}26`
+          : `0 3px 10px rgba(0,0,0,0.25), inset 0 1px 0 ${ec}33`,
+        transition: 'opacity 0.5s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.4,0,0.2,1), box-shadow 0.2s, background 0.2s',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', gap: 1 }}>
         <span style={{
-          fontFamily: 'var(--mono)', fontSize: 8.5, fontWeight: 500, color: '#fff',
-          textShadow: '0 1px 4px rgba(0,0,0,0.5)', whiteSpace: 'nowrap',
-          overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '16px',
+          fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600, color: '#fff',
+          textShadow: '0 1px 4px rgba(0,0,0,0.6)', whiteSpace: 'nowrap',
+          overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '13px',
         }}>
           {rey.nombre}
         </span>
-        {alto > 30 && (
+        {ancho > 90 && (
           <span style={{
-            fontFamily: 'var(--mono)', fontSize: 7, color: 'rgba(255,255,255,0.7)',
-            whiteSpace: 'nowrap', marginLeft: 'auto', textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+            fontFamily: 'var(--mono)', fontSize: 7, color: 'rgba(255,255,255,0.55)',
+            whiteSpace: 'nowrap', lineHeight: '10px',
           }}>
-            {rey.inicioAc}–{rey.finAc}
+            {rey.inicioAc}–{rey.finAc} · {duracion} {duracion === 1 ? 'año' : 'años'}
           </span>
         )}
       </div>
@@ -103,191 +106,281 @@ function BloqueRey({ rey, izquierda, ancho, capa, seleccionado, onSeleccionar })
   )
 }
 
-function ReglaAnios() {
+/* ── Una franja por reino, con su etiqueta fija a la izquierda ──── */
+function FilaReino({ titulo, color, reyes, revelados, seleccionado, onSeleccionar }) {
+  const { reyes: conCarril, totalCarriles } = useMemo(() => asignarCarriles(reyes), [reyes])
+  if (reyes.length === 0) return null
+
+  const alturaFila = totalCarriles * ALTURA_CARRIL + 8
+
   return (
-    <div style={{
-      position: 'relative', width: 60, flexShrink: 0, height: ALTURA_TOTAL,
-      background: 'linear-gradient(to right, rgba(0,0,0,0.3), transparent)',
-      borderRadius: '8px 0 0 8px',
-    }}>
-      {marcasCada(25).map((anio) => {
+    <div style={{ position: 'relative', height: alturaFila, marginBottom: 10 }}>
+      {/* Fondo tenue de la franja, del ancho del período real del reino */}
+      <div style={{
+        position: 'absolute', top: 0, bottom: 0,
+        left: leftPx(Math.max(...reyes.map((r) => r.inicioAc))),
+        width: anchoPx(Math.max(...reyes.map((r) => r.inicioAc)), Math.min(...reyes.map((r) => r.finAc))),
+        background: `linear-gradient(180deg, ${color}0a, transparent)`,
+        borderRadius: 8,
+      }} />
+
+      {/* Etiqueta del reino — sticky: se queda visible mientras haces
+          scroll horizontal, así siempre sabes qué franja estás viendo. */}
+      <div style={{
+        position: 'sticky', left: 0, zIndex: 25, float: 'left',
+        width: ANCHO_ETIQUETA, height: '100%',
+        display: 'flex', alignItems: 'center', paddingLeft: 4,
+        background: 'linear-gradient(to right, rgba(5,5,15,0.96) 70%, transparent)',
+        pointerEvents: 'none',
+      }}>
+        <span style={{
+          fontFamily: 'var(--mono)', fontSize: 8, color, letterSpacing: '0.08em',
+          textTransform: 'uppercase', fontWeight: 700,
+          background: `${color}1a`, padding: '3px 8px', borderRadius: 10,
+          border: `1px solid ${color}40`, whiteSpace: 'nowrap',
+        }}>
+          {titulo}
+        </span>
+      </div>
+
+      {conCarril.map((rey) => (
+        <BloqueRey
+          key={rey.id}
+          rey={rey}
+          visible={revelados.has(rey.id)}
+          seleccionado={seleccionado}
+          onSeleccionar={onSeleccionar}
+        />
+      ))}
+    </div>
+  )
+}
+
+/* ── Regla de años, arriba del todo ─────────────────────────────── */
+function ReglaAnios() {
+  const marcas = []
+  for (let anio = INICIO_EJE; anio >= FIN_EJE; anio -= 25) marcas.push(anio)
+
+  return (
+    <div style={{ position: 'relative', height: 26, width: ANCHO_TOTAL, marginBottom: 6 }}>
+      {marcas.map((anio) => {
         const principal = anio % 50 === 0
         return (
-          <div key={anio} style={{ position: 'absolute', top: topPx(anio) - 8, right: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-            {principal && <div style={{ width: 12, height: 1, background: 'rgba(255,255,255,0.2)' }} />}
+          <div key={anio} style={{
+            position: 'absolute', left: leftPx(anio), top: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+            transform: 'translateX(-50%)',
+          }}>
             <span style={{
-              fontFamily: 'var(--mono)', fontSize: principal ? 9 : 7,
-              color: principal ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
+              fontFamily: 'var(--mono)',
+              fontSize: principal ? 9 : 7,
+              color: principal ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.28)',
               fontWeight: principal ? 600 : 400,
             }}>
               {anio}
             </span>
+            <div style={{
+              width: 1, height: principal ? 8 : 4, marginTop: 2,
+              background: principal ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+            }} />
           </div>
         )
       })}
-      <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 2, background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), rgba(255,255,255,0.1), rgba(255,255,255,0.3))' }} />
     </div>
   )
 }
 
-function LineasGuia() {
-  return marcasCada(25).map((anio) => {
-    const principal = anio % 50 === 0
-    return (
-      <div key={anio} style={{
-        position: 'absolute', top: topPx(anio), left: 0, right: 0,
-        height: principal ? 2 : 1,
-        background: principal
-          ? 'linear-gradient(to right, rgba(255,215,0,0.2), rgba(255,215,0,0.1), rgba(255,215,0,0.2))'
-          : 'rgba(255,255,255,0.05)',
-        opacity: principal ? 0.6 : 0.3,
-      }} />
-    )
-  })
-}
+/* ── Encabezado con efecto parallax: cambia al cruzar la división ── */
+function EncabezadoParallax({ fraccion }) {
+  // fraccion: 0 = extremo izquierdo (1050 a.C.), 1 = extremo derecho (586 a.C.)
+  const fraccionDivision = (INICIO_EJE - ANIO_DIVISION) / (INICIO_EJE - FIN_EJE)
+  const cerca = Math.min(1, Math.max(0, (fraccion - fraccionDivision + 0.06) / 0.12))
+  const unido = 1 - cerca
 
-/** Una columna de reino. Ocupa TODO el eje (0 a ALTURA_TOTAL) sin
- * desplazamiento propio — cada BloqueRey ya sabe dónde ir gracias a
- * topPx(), que usa el mismo origen (1050 a.C.) en toda la línea de
- * tiempo. Ningún wrapper debe "ayudar" corriendo el origen, o los
- * reyes terminan mal ubicados frente a la regla y entre columnas. */
-function ColumnaReino({ reyes, colorEtiqueta, titulo }) {
-  const { reyes: conCarril, totalCarriles } = asignarCarriles(reyes)
-  if (reyes.length === 0) return null
+  const estilo = (op) => ({
+    position: 'absolute', top: 0, left: 0, right: 0,
+    display: 'flex', justifyContent: 'center', gap: 10,
+    opacity: op,
+    transform: `translateY(${(1 - op) * -10}px)`,
+    transition: 'opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.4s cubic-bezier(0.4,0,0.2,1)',
+    pointerEvents: op > 0.5 ? 'auto' : 'none',
+  })
+
+  const pastilla = (texto, color) => (
+    <span style={{
+      fontFamily: 'var(--mono)', fontSize: 9, color, letterSpacing: '0.1em',
+      textTransform: 'uppercase', fontWeight: 700,
+      background: `${color}1f`, padding: '4px 16px', borderRadius: 16,
+      border: `1px solid ${color}4d`, whiteSpace: 'nowrap',
+    }}>
+      {texto}
+    </span>
+  )
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 20, padding: '4px 8px',
-        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', borderRadius: 6,
-        marginBottom: 4, textAlign: 'center', border: `1px solid ${colorEtiqueta}40`,
-        width: 'fit-content', marginInline: 'auto',
-      }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: colorEtiqueta, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600 }}>
-          {titulo}
-        </span>
+    <div style={{ position: 'relative', height: 28, marginBottom: 10 }}>
+      <div style={estilo(unido)}>{pastilla('✦ Reino Unido', '#F59E0B')}</div>
+      <div style={estilo(cerca)}>
+        {pastilla('◀ Judá · Sur', '#60A5FA')}
+        {pastilla('Israel · Norte ▶', '#34D399')}
       </div>
-      {conCarril.map((rey) => {
-        // En vez de dividir el ancho entre carriles (bloques angostos,
-        // difíciles de tocar en el celular), cada carril se ESCALONA:
-        // se corre un poco a la derecha pero conserva casi todo su ancho.
-        // Los reyes que se traslapan se ven como una escalera, no como
-        // columnas apretadas — y siempre queda una zona amplia para tocar.
-        const corrimiento = rey.carril * 10 // % que se corre cada carril extra
-        return (
-          <BloqueRey
-            key={rey.id}
-            rey={rey}
-            izquierda={corrimiento}
-            ancho={98 - corrimiento}
-            capa={rey.carril}
-            seleccionado={rey.__sel}
-            onSeleccionar={rey.__onSel}
-          />
-        )
-      })}
     </div>
   )
 }
 
+/* ═══════════════════════════════════════════════════════════════ */
 export default function LineaTiempoReyes({ reyes }) {
   const [seleccionado, setSeleccionado] = useState(null)
+  const [fraccion, setFraccion] = useState(0)
+  const [revelados, setRevelados] = useState(() => new Set())
+  const scrollRef = useRef(null)
+  const rafRef = useRef(null)
 
-  const unidos = reyes.filter((r) => r.reino === 'Israel unido')
-  const juda = reyes.filter((r) => r.reino === 'Judá')
-  const israel = reyes.filter((r) => r.reino === 'Israel')
+  const unidos = useMemo(() => reyes.filter((r) => r.reino === 'Israel unido'), [reyes])
+  const juda = useMemo(() => reyes.filter((r) => r.reino === 'Judá'), [reyes])
+  const israel = useMemo(() => reyes.filter((r) => r.reino === 'Israel'), [reyes])
 
-  const conSel = (lista) => lista.map((r) => ({ ...r, __sel: seleccionado, __onSel: setSeleccionado }))
+  /** Lee el scroll REAL del contenedor (no window.scrollX — el scroll
+   * ocurre dentro del div con overflowX). De ahí sale tanto el parallax
+   * del encabezado como el revelado progresivo de cada rey. */
+  const onScroll = useCallback((e) => {
+    const el = e.currentTarget
+    if (rafRef.current) return
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null
+      const maxScroll = Math.max(1, el.scrollWidth - el.clientWidth)
+      setFraccion(el.scrollLeft / maxScroll)
+
+      // Revela los reyes cuyo tramo ya entró en la ventana visible.
+      // Una vez revelados, se quedan visibles (no se vuelven a ocultar).
+      const desde = el.scrollLeft - 120
+      const hasta = el.scrollLeft + el.clientWidth + 120
+      setRevelados((prev) => {
+        let cambio = false
+        const siguiente = new Set(prev)
+        for (const rey of reyes) {
+          if (siguiente.has(rey.id)) continue
+          const ini = leftPx(rey.inicioAc)
+          const fin = ini + anchoPx(rey.inicioAc, rey.finAc)
+          if (fin >= desde && ini <= hasta) {
+            siguiente.add(rey.id)
+            cambio = true
+          }
+        }
+        return cambio ? siguiente : prev
+      })
+    })
+  }, [reyes])
+
+  // Revela lo que ya está a la vista al montar (sin esperar el primer scroll).
+  const inicializar = useCallback((el) => {
+    scrollRef.current = el
+    if (!el || reyes.length === 0) return
+    const hasta = el.clientWidth + 120
+    const iniciales = new Set()
+    for (const rey of reyes) {
+      if (leftPx(rey.inicioAc) <= hasta) iniciales.add(rey.id)
+    }
+    setRevelados(iniciales)
+  }, [reyes])
+
+  const porcentaje = Math.round(fraccion * 100)
 
   return (
-    <div style={{
-      background: 'linear-gradient(145deg, rgba(15,15,25,0.95), rgba(5,5,15,0.98))',
-      borderRadius: 16, padding: 24,
-      paddingBottom: seleccionado ? 110 : 24,
-      border: '1px solid rgba(255,255,255,0.06)',
-      boxShadow: '0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05)',
-    }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
-        <div>
-          <span style={{ fontFamily: 'var(--crimson)', fontSize: 20, color: '#fff', letterSpacing: '0.06em', fontWeight: 700 }}>
-            📜 Línea de Tiempo Real
-          </span>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(255,255,255,0.4)', marginLeft: 12 }}>
-            1050 – 586 a.C.
-          </span>
-        </div>
-        <div style={{ display: 'flex', gap: 16, fontSize: 9, fontFamily: 'var(--mono)', color: 'rgba(255,255,255,0.5)' }}>
-          <span><span style={{ color: CE.bueno }}>●</span> Bueno</span>
-          <span><span style={{ color: CE.mixto }}>●</span> Mixto</span>
-          <span><span style={{ color: CE.malo }}>●</span> Malo</span>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex' }}>
-        <div style={{ width: 60, flexShrink: 0 }} />
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-          <span style={{
-            fontFamily: 'var(--mono)', fontSize: 9, color: '#F59E0B', letterSpacing: '0.08em',
-            textTransform: 'uppercase', fontWeight: 600, background: 'rgba(245,158,11,0.1)',
-            padding: '4px 16px', borderRadius: 20, border: '1px solid rgba(245,158,11,0.2)',
-          }}>
-            ✦ Reino Unido
-          </span>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex' }}>
-        <ReglaAnios />
-
-        <div style={{ position: 'relative', flex: 1, height: ALTURA_TOTAL, borderRadius: '0 8px 8px 0' }}>
-          <LineasGuia />
-
-          {/* Reino Unido: 1050 a 930 a.C. — mismo origen que la regla, sin desplazamiento propio */}
-          <div style={{ position: 'absolute', top: 0, left: '5%', width: '90%', height: topPx(930) }}>
-            <ColumnaReino reyes={conSel(unidos)} colorEtiqueta="#F59E0B" titulo="Reino Unido" />
+    <>
+      <div style={{
+        background: 'linear-gradient(145deg, rgba(15,15,25,0.95), rgba(5,5,15,0.98))',
+        borderRadius: 16, padding: '18px 16px 14px',
+        border: '1px solid rgba(255,255,255,0.06)',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05)',
+      }}>
+        {/* Título + leyenda */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 }}>
+          <div>
+            <span style={{ fontFamily: 'var(--crimson)', fontSize: 18, color: '#fff', fontWeight: 700, letterSpacing: '0.04em' }}>
+              📜 Línea de Tiempo
+            </span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(255,255,255,0.35)', marginLeft: 10 }}>
+              1050 – 586 a.C.
+            </span>
           </div>
-
-          <div style={{ position: 'absolute', top: topPx(930), left: '5%', right: '5%', height: 2, background: 'linear-gradient(to right, transparent, rgba(255,215,0,0.3), transparent)' }} />
-
-          {/*
-            Judá e Israel: NO llevan top propio. Cada BloqueRey ya sabe su
-            posición real vía topPx(inicioAc) sobre el eje completo — estos
-            dos divs solo reparten el ANCHO (izquierda/derecha), nunca el
-            alto, para no desincronizar el eje.
-          */}
-          <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '49%' }}>
-            <ColumnaReino reyes={conSel(juda)} colorEtiqueta="#60A5FA" titulo="Judá (Sur)" />
-          </div>
-          <div style={{ position: 'absolute', top: 0, bottom: 0, left: '51%', width: '49%' }}>
-            <ColumnaReino reyes={conSel(israel)} colorEtiqueta="#34D399" titulo="Israel (Norte)" />
+          <div style={{ display: 'flex', gap: 12, fontSize: 8, fontFamily: 'var(--mono)', color: 'rgba(255,255,255,0.45)' }}>
+            <span><span style={{ color: CE.bueno }}>●</span> Bueno</span>
+            <span><span style={{ color: CE.mixto }}>●</span> Mixto</span>
+            <span><span style={{ color: CE.malo }}>●</span> Malo</span>
           </div>
         </div>
-      </div>
 
-      <div style={{ display: 'flex', marginTop: 8 }}>
-        <div style={{ width: 60, flexShrink: 0 }} />
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', fontSize: 8, fontFamily: 'var(--mono)', color: 'rgba(255,255,255,0.4)' }}>
-          <span style={{ color: '#60A5FA' }}>◀ Judá</span>
-          <span style={{ color: '#34D399' }}>Israel ▶</span>
+        <EncabezadoParallax fraccion={fraccion} />
+
+        {/* Contenedor con scroll horizontal — aquí ocurre todo el scroll */}
+        <div
+          ref={inicializar}
+          onScroll={onScroll}
+          style={{ overflowX: 'auto', overflowY: 'hidden', paddingBottom: 6 }}
+        >
+          <div style={{ minWidth: ANCHO_TOTAL, position: 'relative' }}>
+            <ReglaAnios />
+
+            {/* Marcas verticales de eventos clave */}
+            <div style={{
+              position: 'absolute', left: leftPx(ANIO_DIVISION), top: 26, bottom: 0,
+              width: 2, background: 'linear-gradient(to bottom, rgba(255,215,0,0.5), rgba(255,215,0,0.1))',
+              zIndex: 1,
+            }} />
+            <div style={{
+              position: 'absolute', left: leftPx(ANIO_CAIDA_ISRAEL), top: 26, bottom: 0,
+              width: 1, background: 'rgba(239,68,68,0.35)', zIndex: 1,
+            }} />
+
+            <FilaReino titulo="Reino Unido" color="#F59E0B" reyes={unidos} revelados={revelados} seleccionado={seleccionado} onSeleccionar={setSeleccionado} />
+            <FilaReino titulo="Judá · Sur" color="#60A5FA" reyes={juda} revelados={revelados} seleccionado={seleccionado} onSeleccionar={setSeleccionado} />
+            <FilaReino titulo="Israel · Norte" color="#34D399" reyes={israel} revelados={revelados} seleccionado={seleccionado} onSeleccionar={setSeleccionado} />
+          </div>
         </div>
+
+        {/* Barra de progreso del recorrido */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10 }}>
+          <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{
+              width: `${porcentaje}%`, height: '100%',
+              background: 'linear-gradient(to right, #F59E0B, #60A5FA, #34D399)',
+              borderRadius: 2, transition: 'width 0.1s linear',
+            }} />
+          </div>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'rgba(255,255,255,0.35)', minWidth: 34, textAlign: 'right' }}>
+            {porcentaje}%
+          </span>
+        </div>
+
+        <p style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'rgba(255,255,255,0.3)', marginTop: 8, letterSpacing: '0.04em' }}>
+          Desliza horizontalmente · el ancho de cada barra son sus años de reinado
+        </p>
       </div>
 
+      {/* Panel flotante del rey seleccionado */}
       {seleccionado && (
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
           background: 'linear-gradient(145deg, rgba(15,15,25,0.98), rgba(5,5,15,0.99))',
-          backdropFilter: 'blur(16px)', borderTop: `1px solid ${CE[seleccionado.evaluacion] || '#F59E0B'}50`,
-          padding: '16px 20px', boxShadow: `0 -8px 32px rgba(0,0,0,0.5), inset 0 1px 0 ${CE[seleccionado.evaluacion] || '#F59E0B'}30`,
+          backdropFilter: 'blur(16px)',
+          borderTop: `1px solid ${CE[seleccionado.evaluacion] || '#F59E0B'}50`,
+          padding: '14px 18px',
+          boxShadow: `0 -8px 32px rgba(0,0,0,0.5), inset 0 1px 0 ${CE[seleccionado.evaluacion] || '#F59E0B'}30`,
         }}>
-          <div style={{ maxWidth: 720, margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10, flexWrap: 'wrap' }}>
-              <span style={{ fontFamily: 'var(--crimson)', fontSize: 20, color: '#fff', fontWeight: 700 }}>{seleccionado.nombre}</span>
+          <div style={{ maxWidth: 820, margin: '0 auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: 'var(--crimson)', fontSize: 20, color: '#fff', fontWeight: 700 }}>
+                {seleccionado.nombre}
+              </span>
               {seleccionado.evaluacion && <span style={{ fontSize: 16 }}>{IE[seleccionado.evaluacion]}</span>}
               <span style={{
-                fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(255,255,255,0.5)', padding: '2px 12px',
-                background: 'rgba(255,255,255,0.05)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)',
+                fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(255,255,255,0.5)',
+                padding: '2px 12px', background: 'rgba(255,255,255,0.05)',
+                borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)',
               }}>
                 {seleccionado.reino} · {seleccionado.inicioAc}–{seleccionado.finAc} a.C.
+                {' · '}{seleccionado.inicioAc - seleccionado.finAc} años
               </span>
               <button
                 type="button"
@@ -304,11 +397,16 @@ export default function LineaTiempoReyes({ reyes }) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               {seleccionado.cita && <VersiculoLink cita={seleccionado.cita} />}
-              <BotonPreguntarIA tipo="rey" datos={seleccionado} color={CE[seleccionado.evaluacion]} etiqueta="🔍 Contexto histórico" />
+              <BotonPreguntarIA
+                tipo="rey"
+                datos={seleccionado}
+                color={CE[seleccionado.evaluacion]}
+                etiqueta="🔍 Contexto histórico"
+              />
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }

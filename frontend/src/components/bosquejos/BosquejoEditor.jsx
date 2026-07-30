@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { VersiculoLink } from '../../lib/bibliaLink';
 import NotaBoton from './NotaBoton';
 import CampoTexto from './CampoTexto';
+import CampoLinea from './CampoLinea';
 import Diapositivas from '../common/Diapositivas';
 import '../../styles/bosquejo-editor.css';
 import '../../styles/be-premium.css';
@@ -40,11 +41,11 @@ function CampoProposito({ value, onChange }) {
   if (modoOtro) {
     return (
       <div className="be-proposito-otro">
-        <input
-          className="be-input be-proposito"
+        <CampoLinea
+          className="be-proposito-libre"
           placeholder="Escribe el propósito…"
-          value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
+          value={value}
+          onChange={onChange}
           autoFocus
         />
         <button type="button" className="be-proposito-volver" onClick={() => { setModoOtro(false); onChange(''); }} title="Volver a la lista">✕</button>
@@ -257,30 +258,34 @@ export default function BosquejoEditor({
     if (slide.tipo === 'portada') {
       return (
         <>
-          <input
-            className="be-input be-titulo-principal"
+          <CampoLinea
+            className="be-titulo-principal"
             placeholder="Título del bosquejo"
-            value={datos.titulo || ''}
-            onChange={(e) => setCampo('titulo', e.target.value)}
+            value={datos.titulo}
+            onChange={(v) => setCampo('titulo', v)}
           />
-          <div className="be-cita-fila">
-            <input
-              className="be-input be-cita"
+          <div className="be-campo-suelto">
+            <CampoLinea
+              className="be-cita"
               placeholder="Pasaje base — ej: Apocalipsis 1:1-8"
-              value={datos.cita || ''}
-              onChange={(e) => setCampo('cita', e.target.value)}
+              value={datos.cita}
+              onChange={(v) => setCampo('cita', v)}
             />
             {datos.cita?.trim() && (
               <VersiculoLink cita={datos.cita} className="be-versos-link">abrir en RVR1960 ↗</VersiculoLink>
             )}
           </div>
-          <div className="be-tema-fila">
-            <input
-              className="be-input be-tema"
+          <div className="be-campo-suelto">
+            <label className="be-subrotulo">Tema</label>
+            <CampoLinea
+              className="be-tema"
               placeholder="Tema (opcional)"
-              value={datos.tema || ''}
-              onChange={(e) => setCampo('tema', e.target.value)}
+              value={datos.tema}
+              onChange={(v) => setCampo('tema', v)}
             />
+          </div>
+          <div className="be-campo-suelto">
+            <label className="be-subrotulo">Propósito</label>
             <CampoProposito value={datos.proposito} onChange={(v) => setCampo('proposito', v)} />
           </div>
         </>
@@ -327,11 +332,11 @@ export default function BosquejoEditor({
             <button type="button" className="be-icono be-icono-borrar" onClick={() => acciones.eliminar(ruta)} title="Eliminar este punto">✕</button>
           </div>
 
-          <input
-            className="be-input be-titulo-punto dp-titulo-input"
+          <CampoLinea
+            className="be-titulo-punto dp-titulo-input"
             placeholder={nivel === 0 ? 'Punto principal' : 'Subpunto'}
             value={p.titulo}
-            onChange={(e) => acciones.editar(ruta, 'titulo', e.target.value)}
+            onChange={(v) => acciones.editar(ruta, 'titulo', v)}
             autoFocus
           />
 
@@ -342,13 +347,13 @@ export default function BosquejoEditor({
             onChange={(v) => acciones.editar(ruta, 'descripcion', v)}
           />
 
-          <div className="be-versos-fila">
-            <span className="be-versos-etiqueta">📖</span>
-            <input
-              className="be-input be-versos"
-              placeholder="Versículos de apoyo — ej: Apocalipsis 1:8"
+          <div className="be-campo-suelto">
+            <label className="be-subrotulo">📖 Versículos de apoyo</label>
+            <CampoLinea
+              className="be-versos"
+              placeholder="ej: Apocalipsis 1:8"
               value={p.versos}
-              onChange={(e) => acciones.editar(ruta, 'versos', e.target.value)}
+              onChange={(v) => acciones.editar(ruta, 'versos', v)}
             />
             {p.versos?.trim() && (
               <VersiculoLink cita={p.versos} className="be-versos-link">abrir ↗</VersiculoLink>

@@ -101,3 +101,75 @@
   font-size: 0.85rem;
   color: var(--text-muted);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   SUPERFICIE DE ESCRITURA SIN CAJA
+   Antes los campos cortos eran <input> de una línea: el texto se iba
+   de lado y perdías de vista el principio. Ahora todos son textarea
+   que ENVUELVEN y CRECEN hacia abajo, sin borde, sin fondo, sin
+   scroll interno — se escribe directo sobre la hoja.
+   ═══════════════════════════════════════════════════════════════ */
+.be-premium .be-texto-libre {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;          /* nunca scroll interno: el campo crece */
+  font-family: var(--font-family, inherit);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--tinta);
+  padding: 2px 0;
+  margin: 0;
+}
+
+.be-premium .be-texto-libre::placeholder {
+  color: var(--cuero);
+  opacity: 0.5;
+}
+
+/* Al escribir, una línea muy tenue debajo indica el campo activo —
+   sin encerrarlo en una caja. */
+.be-premium .be-texto-libre:focus {
+  box-shadow: 0 1px 0 0 color-mix(in srgb, var(--purpura) 35%, transparent);
+}
+
+/* Cada campo con su jerarquía tipográfica, sin recuadros */
+.be-premium .be-titulo-principal {
+  font-family: 'Lora', serif;
+  font-size: 1.75rem;
+  line-height: 1.25;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.be-premium .be-cita {
+  font-size: 1rem;
+  color: var(--purpura);
+}
+
+.be-premium .be-tema,
+.be-premium .be-proposito-libre {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-style: normal;
+}
+
+.be-premium .be-titulo-punto {
+  font-family: 'Lora', serif;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.be-premium .be-versos {
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+/* Campo suelto: solo separación vertical, sin borde ni fondo */
+.be-premium .be-campo-suelto {
+  margin-bottom: 16px;
+}

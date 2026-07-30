@@ -1,551 +1,154 @@
-import { useEffect, useState, useRef } from 'react'
-import { getFrecuenciaPalabra, getTopPalabrasLibro, getTopPalabrasTestamento, getLibros } from '../lib/db.js'
+import { useEffect, useState } from 'react'
+import { getPatronesBiblicos } from '../lib/db.js'
+import { VersiculoLink } from '../lib/bibliaLink'
+import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 
-// ─── COLORES POR TESTAMENTO / CATEGORÍA ─────────────────────
-const COLORES_CAT = {
-  'Pentateuco':          '#C9A84C',
-  'Historia':            '#7EB8D4',
-  'Poesía':              '#A78BFA',
-  'Profetas Mayores':    '#E07070',
-  'Profetas Menores':    '#FB923C',
-  'Evangelios':          '#34D399',
-  'Epístolas Paulinas':  '#60A5FA',
-  'Epístolas Generales': '#818CF8',
-  'Profecía':            '#F87171',
+const CATEGORIAS = {
+  estructura: { color: '#60A5FA', icon: '🔷', label: 'Estructura literaria' },
+  formula:    { color: '#C9A84C', icon: '🔁', label: 'Fórmulas recurrentes' },
+  ciclo:      { color: '#34D399', icon: '🌀', label: 'Ciclos y series' },
+  pacto:      { color: '#A78BFA', icon: '🤝', label: 'Pactos' },
+  tipologia:  { color: '#E07070', icon: '✝️', label: 'Tipologías' },
 }
 
-const COLOR_AT = '#C9A84C'
-const COLOR_NT = '#60A5FA'
+const SUGERIDAS = ['Jehová', 'amor', 'gracia', 'gloria', 'sangre', 'pecado', 'salvación', 'vida', 'ángel', 'profeta', 'rey', 'pueblo']
 
-// ─── BARRA DE FRECUENCIA ─────────────────────────────────────
-function BarraLibro({ libro, conteo, maxConteo, onClick }) {
-  const pct  = maxConteo > 0 ? (conteo / maxConteo) * 100 : 0
-  const color = COLORES_CAT[libro.categoria] || COLOR_AT
-
-  return (
-    <div
-      onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, cursor: 'pointer', padding: '4px 6px', borderRadius: 4, transition: 'background 0.15s' }}
-      onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-    >
-      {/* Abreviatura */}
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color, width: 32, flexShrink: 0, textAlign: 'right' }}>
-        {libro.abreviatura}
-      </span>
-
-      {/* Barra */}
-      <div style={{ flex: 1, height: 18, background: 'var(--surface2)', borderRadius: 3, overflow: 'hidden', position: 'relative' }}>
-        <div style={{
-          width: `${pct}%`, height: '100%',
-          background: `${color}90`,
-          borderRight: `2px solid ${color}`,
-          borderRadius: 3,
-          transition: 'width 0.4s ease',
-          minWidth: conteo > 0 ? 4 : 0,
-        }}/>
-      </div>
-
-      {/* Conteo */}
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color, width: 40, flexShrink: 0 }}>
-        {conteo}
-      </span>
-    </div>
-  )
-}
-
-// ─── NUBE DE PALABRAS ────────────────────────────────────────
-function NubePalabras({ palabras, onClickPalabra }) {
-  if (!palabras.length) return null
-  const maxConteo = Math.max(...palabras.map(p => Number(p.conteo)))
-  const minConteo = Math.min(...palabras.map(p => Number(p.conteo)))
-
-  function fontSize(conteo) {
-    const n = Number(conteo)
-    const ratio = maxConteo === minConteo ? 0.5 : (n - minConteo) / (maxConteo - minConteo)
-    return 11 + ratio * 22  // 11px → 33px
-  }
-
-  function opacity(conteo) {
-    const n = Number(conteo)
-    const ratio = maxConteo === minConteo ? 0.5 : (n - minConteo) / (maxConteo - minConteo)
-    return 0.5 + ratio * 0.5
-  }
-
-  const COLORES = ['#C9A84C', '#7EB8D4', '#A78BFA', '#34D399', '#FB923C', '#E07070', '#60A5FA']
-
-  return (
-    <div style={{
-      display: 'flex', flexWrap: 'wrap', gap: 8,
-      alignItems: 'center', justifyContent: 'center',
-      padding: '24px', lineHeight: 1.8,
-    }}>
-      {palabras.map((p, i) => (
-        <span
-          key={p.palabra}
-          onClick={() => onClickPalabra(p.palabra)}
-          title={`${p.palabra}: ${p.conteo} veces`}
-          style={{
-            fontFamily: 'var(--crimson)',
-            fontSize: fontSize(p.conteo),
-            color: COLORES[i % COLORES.length],
-            opacity: opacity(p.conteo),
-            cursor: 'pointer',
-            transition: 'all 0.2s',
-            padding: '0 4px',
-          }}
-          onMouseEnter={e => { e.target.style.opacity = '1'; e.target.style.transform = 'scale(1.1)' }}
-          onMouseLeave={e => { e.target.style.opacity = opacity(p.conteo); e.target.style.transform = 'none' }}
-        >
-          {p.palabra}
-        </span>
-      ))}
-    </div>
-  )
-}
-
-// ─── RANKING DE PALABRAS ─────────────────────────────────────
-function RankingPalabras({ palabras, onClickPalabra }) {
-  if (!palabras.length) return null
-  const max = Math.max(...palabras.map(p => Number(p.conteo)))
-  const COLORES = ['#C9A84C', '#7EB8D4', '#A78BFA', '#34D399', '#FB923C', '#E07070']
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      {palabras.map((p, i) => {
-        const pct = (Number(p.conteo) / max) * 100
-        const color = COLORES[i % COLORES.length]
-        return (
-          <div
-            key={p.palabra}
-            onClick={() => onClickPalabra(p.palabra)}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '3px 6px', borderRadius: 4, transition: 'background 0.15s' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--surface2)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-          >
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', width: 20, textAlign: 'right' }}>{i + 1}</span>
-            <span style={{ fontFamily: 'var(--crimson)', fontSize: 16, color, width: 140, flexShrink: 0 }}>{p.palabra}</span>
-            <div style={{ flex: 1, height: 14, background: 'var(--surface2)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ width: `${pct}%`, height: '100%', background: `${color}80`, borderRight: `2px solid ${color}`, transition: 'width 0.4s ease' }}/>
-            </div>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color, width: 36, textAlign: 'right' }}>{p.conteo}</span>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ─── MAPA DE CALOR POR CAPÍTULOS ────────────────────────────
-function MapaCalor({ capitulosData, termino }) {
-  if (!capitulosData.length) return null
-
-  // Agrupar por libro
-  const porLibro = {}
-  capitulosData.forEach(d => {
-    if (!porLibro[d.libro]) porLibro[d.libro] = { abrev: d.abreviatura, caps: {} }
-    porLibro[d.libro].caps[d.capitulo] = Number(d.conteo)
-  })
-
-  const maxConteo = Math.max(...capitulosData.map(d => Number(d.conteo)))
-
-  return (
-    <div style={{ marginTop: 8 }}>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>
-        Distribución por capítulo — cada cuadro = 1 capítulo
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {Object.entries(porLibro).map(([libro, data]) => (
-          <div key={libro} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', width: 28, textAlign: 'right', flexShrink: 0 }}>
-              {data.abrev}
-            </span>
-            <div style={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              {Object.entries(data.caps).map(([cap, conteo]) => {
-                const intensity = maxConteo > 0 ? conteo / maxConteo : 0
-                const bg = `rgba(201,168,76,${0.1 + intensity * 0.9})`
-                return (
-                  <div
-                    key={cap}
-                    title={`${libro} ${cap}: ${conteo} veces`}
-                    style={{ width: 14, height: 14, borderRadius: 2, background: bg, cursor: 'default' }}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-// ─── PÁGINA PRINCIPAL ────────────────────────────────────────
 export default function Patrones() {
-  const [libros, setLibros]             = useState([])
-  const [vistaActiva, setVistaActiva]   = useState('frecuencia')  // 'frecuencia' | 'nube'
-
-  // Vista frecuencia
-  const [termino, setTermino]           = useState('')
-  const [input, setInput]               = useState('')
-  const [frecuencias, setFrecuencias]   = useState([])
-  const [capitulosData, setCapitulosData] = useState([])
-  const [loadingFrec, setLoadingFrec]   = useState(false)
-  const [libroFiltro, setLibroFiltro]   = useState(null)
-
-  // Vista nube
-  const [libroNube, setLibroNube]       = useState('')
-  const [testamentoNube, setTestNube]   = useState('Antiguo')
-  const [palabrasNube, setPalabrasNube] = useState([])
-  const [modoNube, setModoNube]         = useState('nube')  // 'nube' | 'ranking'
-  const [loadingNube, setLoadingNube]   = useState(false)
+  const [patrones, setPatrones] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [filtroCat, setFiltroCat] = useState('todos')
+  const [palabra, setPalabra] = useState('')
 
   useEffect(() => {
-    getLibros().then(setLibros).catch(console.error)
+    getPatronesBiblicos().then(d => { setPatrones(d); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  // ─── Búsqueda de frecuencia ──────────────────────────────
-  async function buscarFrecuencia(t) {
-    if (!t.trim()) return
-    setTermino(t.trim())
-    setLoadingFrec(true)
-    setCapitulosData([])
-    setLibroFiltro(null)
-    try {
-      const [freq, caps] = await Promise.all([
-        getFrecuenciaPalabra(t.trim()),
-        getPalabraEnLibros ? getPalabraEnLibros(t.trim()) : Promise.resolve([]),
-      ])
-      setFrecuencias(freq)
-      setCapitulosData(caps || [])
-    } catch(e) {
-      console.error(e)
-    }
-    setLoadingFrec(false)
+  const filtrados = filtroCat === 'todos' ? patrones : patrones.filter(p => p.categoria === filtroCat)
+  const contar = (cat) => patrones.filter(p => p.categoria === cat).length
+
+  const analizarPalabra = (termino) => {
+    const t = (termino || '').trim()
+    if (!t) return
+    const pregunta =
+      `Analiza el uso de la palabra "${t}" en la Biblia. Dame: ` +
+      `1) cuántas veces aparece aproximadamente y en qué libros se concentra, ` +
+      `2) el término original en hebreo y/o griego con su significado, ` +
+      `3) los pasajes más significativos donde aparece, ` +
+      `4) cómo evoluciona su uso entre el Antiguo y el Nuevo Testamento.`
+    window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(pregunta)}`, '_blank')
   }
-
-  // Importar función adicional
-  const [getPalabraEnLibros, setGetPalabraEnLibros] = useState(null)
-  useEffect(() => {
-    import('../lib/db.js').then(m => {
-      setGetPalabraEnLibros(() => m.getPalabraEnLibros)
-    })
-  }, [])
-
-  function handleSubmit(e) {
-    e.preventDefault()
-    if (input.trim()) buscarFrecuencia(input.trim())
-  }
-
-  // ─── Nube de palabras ────────────────────────────────────
-  useEffect(() => {
-    if (vistaActiva !== 'nube') return
-    setLoadingNube(true)
-    setPalabrasNube([])
-    const fn = libroNube
-      ? getTopPalabrasLibro(libroNube, 40)
-      : getTopPalabrasTestamento(testamentoNube, 40)
-    fn.then(p => { setPalabrasNube(p); setLoadingNube(false) })
-      .catch(() => setLoadingNube(false))
-  }, [vistaActiva, libroNube, testamentoNube])
-
-  // Stats de frecuencia
-  const totalOcurrencias = frecuencias.reduce((a, f) => a + Number(f.conteo), 0)
-  const librosConPalabra = frecuencias.length
-  const maxConteo = frecuencias.length ? Math.max(...frecuencias.map(f => Number(f.conteo))) : 1
-
-  // Filtrar por testamento si hay selección
-  const frecsAT = frecuencias.filter(f => f.testamento === 'Antiguo')
-  const frecsNT = frecuencias.filter(f => f.testamento === 'Nuevo')
-  const frecsVisible = libroFiltro
-    ? frecuencias.filter(f => f.abreviatura === libroFiltro)
-    : frecuencias
 
   return (
-    <main style={{ flex: 1, padding: '32px 40px 80px', maxWidth: 900, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
 
-      {/* ─── HEADER ─── */}
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', marginBottom: 6, fontWeight: 300 }}>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           Patrones Bíblicos
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-          Analiza la frecuencia y distribución de palabras en los 66 libros de la Biblia RV1960.
+          Las estructuras, fórmulas y repeticiones con las que está construida la Escritura — y un analizador de palabras
         </p>
       </div>
 
-      {/* ─── TABS ─── */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 28, background: 'var(--surface2)', padding: 4, borderRadius: 6, width: 'fit-content' }}>
-        {[
-          { key: 'frecuencia', label: '🔍 Frecuencia de palabras' },
-          { key: 'nube',       label: '☁️ Nube de palabras' },
-        ].map(tab => (
+      {/* Analizador de palabras */}
+      <div style={{
+        background: 'rgba(201,168,76,0.06)',
+        borderTop: '1px solid rgba(201,168,76,0.18)',
+        borderRight: '1px solid rgba(201,168,76,0.18)',
+        borderBottom: '1px solid rgba(201,168,76,0.18)',
+        borderLeft: '3px solid var(--gold)',
+        borderRadius: 'var(--radius)', padding: '16px', marginBottom: 24,
+      }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>
+          🔍 Analizar una palabra
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+          <input
+            style={{ flex: 1, minWidth: 180, background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '8px 14px', borderRadius: 'var(--radius)', outline: 'none' }}
+            placeholder="Escribe una palabra…"
+            value={palabra}
+            onChange={e => setPalabra(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') analizarPalabra(palabra) }}
+          />
           <button
-            key={tab.key}
-            onClick={() => setVistaActiva(tab.key)}
+            onClick={() => analizarPalabra(palabra)}
+            disabled={!palabra.trim()}
             style={{
-              fontFamily: 'var(--mono)', fontSize: 11,
-              padding: '8px 18px', borderRadius: 4, border: 'none',
-              background: vistaActiva === tab.key ? 'var(--gold)' : 'none',
-              color: vistaActiva === tab.key ? 'var(--bg)' : 'var(--text-muted)',
-              cursor: 'pointer', fontWeight: vistaActiva === tab.key ? 700 : 400,
-              transition: 'all 0.2s', letterSpacing: '0.04em',
+              fontFamily: 'var(--mono)', fontSize: 10, padding: '8px 18px', borderRadius: 4,
+              border: '1px solid var(--gold)', background: 'var(--gold-glow)', color: 'var(--gold)',
+              cursor: palabra.trim() ? 'pointer' : 'not-allowed', opacity: palabra.trim() ? 1 : 0.4,
             }}
           >
-            {tab.label}
+            Analizar
           </button>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>SUGERIDAS:</span>
+          {SUGERIDAS.map(s => (
+            <button key={s} onClick={() => { setPalabra(s); analizarPalabra(s) }} style={{
+              fontFamily: 'var(--mono)', fontSize: 9, padding: '3px 10px', borderRadius: 12,
+              border: '1px solid var(--border2)', background: 'none', color: 'var(--text-muted)', cursor: 'pointer',
+            }}>{s}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filtros de categoría */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
+        <button onClick={() => setFiltroCat('todos')} style={{
+          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
+          border: `1px solid ${filtroCat === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
+          background: filtroCat === 'todos' ? 'var(--gold-glow)' : 'none',
+          color: filtroCat === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
+        }}>Todos ({patrones.length})</button>
+        {Object.entries(CATEGORIAS).map(([key, info]) => (
+          contar(key) > 0 && (
+            <button key={key} onClick={() => setFiltroCat(key)} style={{
+              fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
+              border: `1px solid ${filtroCat === key ? info.color : 'var(--border2)'}`,
+              background: filtroCat === key ? `${info.color}18` : 'none',
+              color: filtroCat === key ? info.color : 'var(--text-muted)', cursor: 'pointer',
+            }}>{info.icon} {info.label} ({contar(key)})</button>
+          )
         ))}
       </div>
 
-      {/* ══════════════════════════════════════════════════════ */}
-      {/* VISTA 1 — FRECUENCIA */}
-      {/* ══════════════════════════════════════════════════════ */}
-      {vistaActiva === 'frecuencia' && (
-        <div>
-          {/* Búsqueda */}
-          <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-            <input
-              className="search-input-lg"
-              type="text"
-              placeholder='Ej: amor, Jehová, gracia, sangre, gloria...'
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              autoFocus
-              style={{ flex: 1 }}
-            />
-            <button className="btn-primary" type="submit" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>
-              Analizar
-            </button>
-          </form>
+      {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 
-          {/* Palabras sugeridas */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.1em', alignSelf: 'center' }}>SUGERIDAS:</span>
-            {['Jehová', 'amor', 'gracia', 'gloria', 'sangre', 'pecado', 'salvación', 'vida', 'muerte', 'ángel', 'profeta', 'tierra', 'cielo', 'rey', 'pueblo'].map(s => (
-              <button
-                key={s}
-                onClick={() => { setInput(s); buscarFrecuencia(s) }}
-                style={{
-                  fontFamily: 'var(--crimson)', fontSize: 15,
-                  color: 'var(--text-muted)', background: 'none',
-                  border: '1px solid var(--border)', borderRadius: 4,
-                  padding: '3px 10px', cursor: 'pointer',
-                  transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => { e.target.style.color = 'var(--gold)'; e.target.style.borderColor = 'var(--gold)' }}
-                onMouseLeave={e => { e.target.style.color = 'var(--text-muted)'; e.target.style.borderColor = 'var(--border)' }}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-
-          {loadingFrec && (
-            <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>
-          )}
-
-          {!loadingFrec && termino && frecuencias.length > 0 && (
-            <>
-              {/* Stats resumen */}
-              <div style={{ display: 'flex', gap: 20, marginBottom: 24, flexWrap: 'wrap' }}>
-                {[
-                  { label: 'Ocurrencias totales', valor: totalOcurrencias.toLocaleString('es-CO'), color: 'var(--gold)' },
-                  { label: 'Libros donde aparece', valor: `${librosConPalabra} / 66`, color: 'var(--green-light)' },
-                  { label: 'Libro con más ocurrencias', valor: frecuencias[0]?.libro || '-', color: '#A78BFA' },
-                  { label: 'Máximo en un libro', valor: maxConteo.toLocaleString('es-CO'), color: '#FB923C' },
-                ].map(s => (
-                  <div key={s.label} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '12px 16px', minWidth: 140 }}>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>{s.label}</div>
-                    <div style={{ fontFamily: 'var(--crimson)', fontSize: 22, color: s.color, lineHeight: 1 }}>{s.valor}</div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Filtros AT / NT */}
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>FILTRAR:</span>
-                {[
-                  { label: 'Toda la Biblia', val: null },
-                  { label: `AT (${frecsAT.reduce((a,f)=>a+Number(f.conteo),0)})`, val: 'AT' },
-                  { label: `NT (${frecsNT.reduce((a,f)=>a+Number(f.conteo),0)})`, val: 'NT' },
-                ].map(f => (
-                  <button
-                    key={f.label}
-                    onClick={() => setLibroFiltro(f.val)}
-                    style={{
-                      fontFamily: 'var(--mono)', fontSize: 10, padding: '4px 12px',
-                      borderRadius: 4, border: `1px solid ${libroFiltro === f.val ? 'var(--gold)' : 'var(--border2)'}`,
-                      background: libroFiltro === f.val ? 'var(--gold-glow)' : 'none',
-                      color: libroFiltro === f.val ? 'var(--gold)' : 'var(--text-muted)',
-                      cursor: 'pointer', transition: 'all 0.15s',
-                    }}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Gráfico de barras — AT */}
-              {(libroFiltro === null || libroFiltro === 'AT') && frecsAT.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: COLOR_AT, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: COLOR_AT, display: 'inline-block' }}/>
-                    Antiguo Testamento — {frecsAT.reduce((a,f)=>a+Number(f.conteo),0).toLocaleString('es-CO')} ocurrencias
-                  </div>
-                  {frecsAT.map(f => (
-                    <BarraLibro key={f.abreviatura} libro={f} conteo={Number(f.conteo)} maxConteo={maxConteo} onClick={() => {}} />
-                  ))}
+      {!loading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtrados.map((p) => {
+            const info = CATEGORIAS[p.categoria] || { color: 'var(--gold)', icon: '•', label: p.categoria }
+            return (
+              <div key={p.id} style={{
+                background: 'var(--surface)',
+                borderTop: `1px solid ${info.color}20`, borderRight: `1px solid ${info.color}20`,
+                borderBottom: `1px solid ${info.color}20`, borderLeft: `3px solid ${info.color}`,
+                borderRadius: 'var(--radius)', padding: '14px 16px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 15 }}>{info.icon}</span>
+                  <span style={{ fontFamily: 'var(--crimson)', fontSize: 16, color: 'var(--text)' }}>{p.nombre}</span>
+                  <span style={{
+                    fontFamily: 'var(--mono)', fontSize: 8, color: info.color,
+                    background: `${info.color}15`, border: `1px solid ${info.color}30`,
+                    borderRadius: 3, padding: '2px 8px',
+                  }}>{info.label}</span>
                 </div>
-              )}
 
-              {/* Gráfico de barras — NT */}
-              {(libroFiltro === null || libroFiltro === 'NT') && frecsNT.length > 0 && (
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: COLOR_NT, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: COLOR_NT, display: 'inline-block' }}/>
-                    Nuevo Testamento — {frecsNT.reduce((a,f)=>a+Number(f.conteo),0).toLocaleString('es-CO')} ocurrencias
-                  </div>
-                  {frecsNT.map(f => (
-                    <BarraLibro key={f.abreviatura} libro={f} conteo={Number(f.conteo)} maxConteo={maxConteo} onClick={() => {}} />
-                  ))}
+                {p.descripcion && (
+                  <p style={{ fontSize: 12.5, color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 10px' }}>
+                    {p.descripcion}
+                  </p>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  {p.cita && <VersiculoLink cita={p.cita} />}
+                  <BotonPreguntarIA tipo="patron" datos={p} color={info.color} />
                 </div>
-              )}
-
-              {/* Mapa de calor por capítulos */}
-              {capitulosData.length > 0 && (
-                <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 20px', marginTop: 8 }}>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
-                    Mapa de calor — distribución por capítulos
-                  </div>
-                  <MapaCalor capitulosData={capitulosData} termino={termino} />
-                </div>
-              )}
-            </>
-          )}
-
-          {!loadingFrec && termino && frecuencias.length === 0 && (
-            <div className="empty">
-              «{termino}» no aparece en la tabla de frecuencias<br/>
-              <span style={{ fontSize: 11 }}>Intenta con otra forma de la palabra</span>
-            </div>
-          )}
-
-          {!termino && (
-            <div className="empty" style={{ padding: 40 }}>
-              Escribe una palabra para ver su distribución en los 66 libros
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════ */}
-      {/* VISTA 2 — NUBE DE PALABRAS */}
-      {/* ══════════════════════════════════════════════════════ */}
-      {vistaActiva === 'nube' && (
-        <div>
-          {/* Controles */}
-          <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-            {/* Selector libro */}
-            <select
-              className="search-select"
-              value={libroNube}
-              onChange={e => setLibroNube(e.target.value)}
-            >
-              <option value="">Por testamento</option>
-              <option value="" disabled>── Antiguo Testamento ──</option>
-              {libros.filter(l => l.testamento === 'Antiguo').map(l => (
-                <option key={l.id} value={l.id}>{l.nombre}</option>
-              ))}
-              <option value="" disabled>── Nuevo Testamento ──</option>
-              {libros.filter(l => l.testamento === 'Nuevo').map(l => (
-                <option key={l.id} value={l.id}>{l.nombre}</option>
-              ))}
-            </select>
-
-            {/* Si no hay libro, selector de testamento */}
-            {!libroNube && (
-              <div style={{ display: 'flex', gap: 4 }}>
-                {['Antiguo', 'Nuevo'].map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setTestNube(t)}
-                    style={{
-                      fontFamily: 'var(--mono)', fontSize: 10,
-                      padding: '8px 14px', borderRadius: 4,
-                      border: `1px solid ${testamentoNube === t ? 'var(--gold)' : 'var(--border2)'}`,
-                      background: testamentoNube === t ? 'var(--gold-glow)' : 'none',
-                      color: testamentoNube === t ? 'var(--gold)' : 'var(--text-muted)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {t} Testamento
-                  </button>
-                ))}
               </div>
-            )}
-
-            {/* Modo de visualización */}
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
-              {[
-                { key: 'nube',    label: '☁️ Nube' },
-                { key: 'ranking', label: '📊 Ranking' },
-              ].map(m => (
-                <button
-                  key={m.key}
-                  onClick={() => setModoNube(m.key)}
-                  style={{
-                    fontFamily: 'var(--mono)', fontSize: 10,
-                    padding: '7px 14px', borderRadius: 4,
-                    border: `1px solid ${modoNube === m.key ? 'var(--gold)' : 'var(--border2)'}`,
-                    background: modoNube === m.key ? 'var(--gold-glow)' : 'none',
-                    color: modoNube === m.key ? 'var(--gold)' : 'var(--text-muted)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Título */}
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 16 }}>
-            {libroNube
-              ? `Top 40 palabras — ${libros.find(l => String(l.id) === String(libroNube))?.nombre}`
-              : `Top 40 palabras — ${testamentoNube} Testamento`
-            }
-            {palabrasNube.length > 0 && (
-              <span style={{ marginLeft: 12, color: 'var(--text-muted)' }}>
-                · Click en una palabra para analizarla
-              </span>
-            )}
-          </div>
-
-          {loadingNube && (
-            <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>
-          )}
-
-          {/* Nube o Ranking */}
-          {!loadingNube && palabrasNube.length > 0 && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '8px', minHeight: 200 }}>
-              {modoNube === 'nube'
-                ? <NubePalabras
-                    palabras={palabrasNube}
-                    onClickPalabra={p => { setInput(p); setVistaActiva('frecuencia'); buscarFrecuencia(p) }}
-                  />
-                : <div style={{ padding: '12px 8px' }}>
-                    <RankingPalabras
-                      palabras={palabrasNube}
-                      onClickPalabra={p => { setInput(p); setVistaActiva('frecuencia'); buscarFrecuencia(p) }}
-                    />
-                  </div>
-              }
-            </div>
-          )}
-
-          <div style={{ marginTop: 12, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.06em' }}>
-            * Se excluyen palabras de menos de 4 caracteres. Click en cualquier palabra para ver su análisis completo.
-          </div>
+            )
+          })}
         </div>
       )}
     </main>

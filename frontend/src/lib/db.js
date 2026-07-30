@@ -285,3 +285,29 @@ export async function getJesusEnLibros() {
     return [];
   }
 }
+// Agregar esta funciÃ³n a frontend/src/lib/db.js
+// (junto a getJesusEnLibros, getReyes, etc. â€” mismo patrÃ³n, mismo `api`)
+
+export async function getPatronesBiblicos() {
+  try {
+    const response = await api.get('/biblia/patrones-biblicos');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching patrones biblicos:', error);
+    return [];
+  }
+}
+
+// Agregar esta funciÃ³n a frontend/src/lib/db.js
+// Trae TODO el estudio del EspÃ­ritu Santo en una sola llamada; la pÃ¡gina
+// filtra por categorÃ­a del lado del cliente.
+
+export async function getEspirituSanto() {
+  try {
+    const response = await api.get('/biblia/espiritu-santo');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching espiritu santo:', error);
+    return [];
+  }
+}

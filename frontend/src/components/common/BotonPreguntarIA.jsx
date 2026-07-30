@@ -64,6 +64,27 @@ const PREGUNTAS = {
     `de Cristo se conecta con el contenido del libro, 3) otros pasajes del mismo libro ` +
     `que refuercen esa conexión, 4) una aclaración honesta de si es una tipología ` +
     `ampliamente reconocida o una asociación más tradicional/homilética.`,
+
+  patron: (d) =>
+    `En el estudio de la Biblia se identifica el patrón "${d.nombre}" ` +
+    `(categoría: ${d.categoria}). Explícamelo en profundidad: 1) en qué consiste ` +
+    `exactamente el patrón, 2) dónde más aparece en la Escritura, 3) por qué los ` +
+    `autores bíblicos lo usaban, 4) qué aporta a la interpretación del texto. ` +
+    `Ejemplo de referencia: ${d.cita || 'no especificada'}.`,
+
+  palabra_frecuencia: (d) =>
+    `Analiza el uso de la palabra "${d.palabra}" en la Biblia. Dame: ` +
+    `1) cuántas veces aparece aproximadamente y en qué libros se concentra, ` +
+    `2) el término original en hebreo y/o griego con su significado, ` +
+    `3) los pasajes más significativos donde aparece, ` +
+    `4) cómo evoluciona su uso entre el Antiguo y el Nuevo Testamento.`,
+
+  espiritu_libro: (d) =>
+    `Explícame en profundidad cómo se presenta el Espíritu Santo en el libro de ` +
+    `"${d.descripcion}" de la Biblia. Referencia principal: ${d.cita}. Dame: ` +
+    `1) el contexto de ese pasaje, 2) todas las demás menciones del Espíritu en ` +
+    `ese mismo libro, 3) qué aspecto particular de su persona u obra se destaca ` +
+    `allí, 4) cómo encaja con la enseñanza del resto de la Escritura sobre él.`,
 }
 
 export default function BotonPreguntarIA({ tipo, datos, etiqueta = '🤖 Preguntar a la IA', color }) {

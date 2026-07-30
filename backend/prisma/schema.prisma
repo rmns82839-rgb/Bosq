@@ -121,12 +121,14 @@ model PalabraJesus {
 }
 
 model EspirituSanto {
-  id          String   @id @default(cuid())
-  categoria   String
-  titulo      String
-  cita        String?
-  descripcion String?
-  createdAt   DateTime @default(now())
+  id                     String   @id @default(cuid())
+  categoria              String
+  titulo                 String
+  cita                   String?
+  descripcion            String?
+  orden                  Int?
+  referenciasAdicionales Json     @default("[]")
+  createdAt              DateTime @default(now())
 
   @@map("espiritu_santo")
 }
@@ -143,4 +145,15 @@ model JesusEnLibro {
   createdAt            DateTime @default(now())
 
   @@map("jesus_en_libros")
+}
+
+model PatronBiblico {
+  id          String   @id @default(cuid())
+  nombre      String
+  categoria   String
+  cita        String?
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  @@map("patrones_biblicos")
 }

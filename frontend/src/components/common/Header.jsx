@@ -11,6 +11,7 @@ const modulosBiblia = [
   { emoji: '🔢', label: 'Números', ruta: '/biblia/numerologia' },
   { emoji: '🕊️', label: 'Espíritu', ruta: '/biblia/neumatologia' },
   { emoji: '👑', label: 'Reyes', ruta: '/biblia/reyes' },
+  { emoji: '🗝️', label: 'Jesús×Libro', ruta: '/biblia/jesus-en-libros' },
   { emoji: '⭐', label: 'Estudios', ruta: '/biblia/especiales' },
   { emoji: '📊', label: 'Patrones', ruta: '/biblia/patrones' },
 ];

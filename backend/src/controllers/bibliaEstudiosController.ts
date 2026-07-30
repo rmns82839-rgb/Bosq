@@ -81,12 +81,14 @@ export const getPalabrasJesus = async (_req: Request, res: Response) => {
 };
 
 // ─── ESPÍRITU SANTO (6 categorías, una tabla, filtradas por `categoria`) ──
-function getEspirituPorCategoria(categoria: string) {
+function getEspirituPorCategoria(categoria: string, porOrden = false) {
   return async (_req: Request, res: Response) => {
     try {
       const items = await prisma.espirituSanto.findMany({
         where: { categoria },
-        orderBy: { titulo: 'asc' },
+        // `por_libro` y `fruto` llevan un orden propio (canónico y el de
+        // Gálatas 5); el resto se ordena alfabéticamente.
+        orderBy: porOrden ? { orden: 'asc' } : { titulo: 'asc' },
       });
       res.json(items);
     } catch (error) {
@@ -96,12 +98,13 @@ function getEspirituPorCategoria(categoria: string) {
   };
 }
 
+export const getNaturalezaEspiritu = getEspirituPorCategoria('naturaleza');
 export const getNombresEspiritu = getEspirituPorCategoria('nombre');
 export const getObrasEspiritu = getEspirituPorCategoria('obra');
 export const getSimbolosEspiritu = getEspirituPorCategoria('simbolo');
 export const getDonesEspiritu = getEspirituPorCategoria('don');
-export const getFrutoEspiritu = getEspirituPorCategoria('fruto');
-export const getEspirituPorLibro = getEspirituPorCategoria('por_libro');
+export const getFrutoEspiritu = getEspirituPorCategoria('fruto', true);
+export const getEspirituPorLibro = getEspirituPorCategoria('por_libro', true);
 
 // ─── JESÚS EN CADA LIBRO ──────────────────────────────────────────
 export const getJesusEnLibros = async (_req: Request, res: Response) => {
@@ -111,5 +114,29 @@ export const getJesusEnLibros = async (_req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching jesus en libros:', error);
     res.status(500).json({ error: 'Error al obtener el contenido de Jesús en cada libro' });
+  }
+};
+
+// ─── PATRONES BÍBLICOS ────────────────────────────────────────────
+export const getPatronesBiblicos = async (_req: Request, res: Response) => {
+  try {
+    const patrones = await prisma.patronBiblico.findMany({ orderBy: { categoria: 'asc' } });
+    res.json(patrones);
+  } catch (error) {
+    console.error('Error fetching patrones biblicos:', error);
+    res.status(500).json({ error: 'Error al obtener patrones bíblicos' });
+  }
+};
+
+// ─── ESPÍRITU SANTO: todo el estudio en una sola llamada ─────────
+// Más simple que nueve endpoints separados: la página filtra por
+// categoría del lado del cliente.
+export const getEspirituSantoTodo = async (_req: Request, res: Response) => {
+  try {
+    const items = await prisma.espirituSanto.findMany({ orderBy: { id: 'asc' } });
+    res.json(items);
+  } catch (error) {
+    console.error('Error fetching espiritu santo:', error);
+    res.status(500).json({ error: 'Error al obtener el estudio del Espíritu Santo' });
   }
 };

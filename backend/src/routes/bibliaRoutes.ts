@@ -8,6 +8,7 @@ import {
   getProfecias,
   getJuicios,
   getPalabrasJesus,
+  getNaturalezaEspiritu,
   getNombresEspiritu,
   getObrasEspiritu,
   getSimbolosEspiritu,
@@ -15,6 +16,8 @@ import {
   getFrutoEspiritu,
   getEspirituPorLibro,
   getJesusEnLibros,
+  getPatronesBiblicos,
+  getEspirituSantoTodo,
 } from '../controllers/bibliaEstudiosController';
 import { authMiddleware } from '../middleware/auth';
 
@@ -33,6 +36,7 @@ router.get('/reyes', getReyes);
 router.get('/profecias', getProfecias);
 router.get('/juicios', getJuicios);
 router.get('/palabras-jesus', getPalabrasJesus);
+router.get('/naturaleza-espiritu', getNaturalezaEspiritu);
 router.get('/nombres-espiritu', getNombresEspiritu);
 router.get('/obras-espiritu', getObrasEspiritu);
 router.get('/simbolos-espiritu', getSimbolosEspiritu);
@@ -40,5 +44,7 @@ router.get('/dones-espiritu', getDonesEspiritu);
 router.get('/fruto-espiritu', getFrutoEspiritu);
 router.get('/espiritu-por-libro', getEspirituPorLibro);
 router.get('/jesus-en-libros', getJesusEnLibros);
+router.get('/patrones-biblicos', getPatronesBiblicos);
+router.get('/espiritu-santo', getEspirituSantoTodo);
 
 export default router;

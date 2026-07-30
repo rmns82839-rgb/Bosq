@@ -1,37 +1,39 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { getAngeles } from '../lib/db.js'
+import { VersiculoLink } from '../lib/bibliaLink'
+import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 
 const TIPOS = {
-  arcángel:  { color: '#A78BFA', icon: '⚔️', label: 'Arcángel' },
-  mensajero: { color: '#60A5FA', icon: '✉️', label: 'Mensajero' },
-  querubín:  { color: '#C9A84C', icon: '✨', label: 'Querubín' },
-  serafín:   { color: '#FB923C', icon: '🔥', label: 'Serafín' },
-  teofanía:  { color: '#34D399', icon: '🌟', label: 'Ángel de Jehová' },
-  hueste:    { color: '#F87171', icon: '⚔️', label: 'Hueste Celestial' },
-  juicio:    { color: '#F87171', icon: '⚖️', label: 'Ángel de Juicio' },
-  intercesor:{ color: '#818CF8', icon: '🙏', label: 'Intercesor' },
+  'arcángel':           { color: '#C9A84C', icon: '⚔️' },
+  'mensajero':          { color: '#60A5FA', icon: '📜' },
+  'guardián':           { color: '#A78BFA', icon: '🛡️' },
+  'adorador':           { color: '#FBBF24', icon: '🔥' },
+  'teofanía':           { color: '#E0B0FF', icon: '✦' },
+  'ejecutor de juicio': { color: '#F87171', icon: '⚖️' },
+  'protector':          { color: '#34D399', icon: '🛡️' },
+  'liberador':          { color: '#6AAF7E', icon: '🗝️' },
+  'ser celestial':      { color: '#7EB8D4', icon: '👁️' },
+  'servicial':          { color: '#9DB56F', icon: '🕊️' },
+  'caído':              { color: '#EF4444', icon: '🌑' },
 }
 
 export default function Angelologia() {
-  const [angeles, setAngeles]       = useState([])
-  const [loading, setLoading]       = useState(true)
+  const [angeles, setAngeles] = useState([])
+  const [loading, setLoading] = useState(true)
   const [filtroTipo, setFiltroTipo] = useState('todos')
-  const [busqueda, setBusqueda]     = useState('')
-  const [seleccionado, setSeleccionado] = useState(null)
-  const navigate = useNavigate()
+  const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
     getAngeles().then(d => { setAngeles(d); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  const tipos = [...new Set(angeles.map(a => a.tipo))]
+  const tipos = [...new Set(angeles.map(a => a.tipo).filter(Boolean))]
 
   const filtrados = angeles.filter(a => {
     const matchTipo = filtroTipo === 'todos' || a.tipo === filtroTipo
-    const matchBusq = !busqueda || a.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                      a.descripcion?.toLowerCase().includes(busqueda.toLowerCase()) ||
-                      a.mision?.toLowerCase().includes(busqueda.toLowerCase())
+    const matchBusq = !busqueda ||
+      a.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      a.descripcion?.toLowerCase().includes(busqueda.toLowerCase())
     return matchTipo && matchBusq
   })
 
@@ -43,15 +45,14 @@ export default function Angelologia() {
           Angelología Bíblica
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-          Todos los ángeles, querubines, serafines y seres celestiales mencionados en la Biblia RV1960
+          Ángeles y seres celestiales en la Escritura — toca "Preguntar a la IA" para su contexto completo
         </p>
       </div>
 
-      {/* Filtros */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
         <input
           style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '8px 14px', borderRadius: 'var(--radius)', outline: 'none', minWidth: 180 }}
-          placeholder="Buscar por nombre o misión..."
+          placeholder="Buscar ángel..."
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
         />
@@ -62,7 +63,7 @@ export default function Angelologia() {
           color: filtroTipo === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
         }}>Todos ({angeles.length})</button>
         {tipos.map(t => {
-          const info = TIPOS[t] || { color: 'var(--text-muted)', icon: '•', label: t }
+          const info = TIPOS[t] || { color: 'var(--text-muted)', icon: '•' }
           const count = angeles.filter(a => a.tipo === t).length
           return (
             <button key={t} onClick={() => setFiltroTipo(t)} style={{
@@ -70,61 +71,61 @@ export default function Angelologia() {
               border: `1px solid ${filtroTipo === t ? info.color : 'var(--border2)'}`,
               background: filtroTipo === t ? `${info.color}18` : 'none',
               color: filtroTipo === t ? info.color : 'var(--text-muted)', cursor: 'pointer',
-            }}>{info.icon} {info.label} ({count})</button>
+            }}>{info.icon} {t} ({count})</button>
           )
         })}
       </div>
 
       <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-muted)', marginBottom: 16 }}>
-        {loading ? 'Cargando...' : `${filtrados.length} entradas`}
+        {loading ? 'Cargando...' : `${filtrados.length} seres celestiales`}
       </div>
 
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 
       {!loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {filtrados.map((a, i) => {
-            const info = TIPOS[a.tipo] || { color: '#7EB8D4', icon: '•', label: a.tipo }
-            const isOpen = seleccionado === i
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+          {filtrados.map((a) => {
+            const info = TIPOS[a.tipo] || { color: 'var(--gold)', icon: '👼' }
             return (
-              <div key={i} style={{ background: 'var(--surface)', border: `1px solid ${info.color}20`, borderLeft: `3px solid ${info.color}`, borderRadius: 'var(--radius)', overflow: 'hidden' }}>
-                <div onClick={() => setSeleccionado(isOpen ? null : i)} style={{ padding: '14px 16px', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 22, flexShrink: 0 }}>{info.icon}</span>
+              <div key={a.id} style={{
+                background: 'var(--surface)',
+                borderTop: `3px solid ${info.color}`,
+                borderRight: `1px solid ${info.color}25`,
+                borderBottom: `1px solid ${info.color}25`,
+                borderLeft: `1px solid ${info.color}25`,
+                borderRadius: 'var(--radius)',
+                padding: '16px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
+                  <span style={{ fontSize: 20 }}>{info.icon}</span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: 'var(--crimson)', fontSize: 17, color: 'var(--text)' }}>{a.nombre}</span>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: info.color, background: `${info.color}15`, border: `1px solid ${info.color}30`, borderRadius: 3, padding: '2px 7px' }}>
-                        {info.label}
-                      </span>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                        {a.libro} {a.capitulo}:{a.versiculo}
-                      </span>
+                    <div style={{ fontFamily: 'var(--crimson)', fontSize: 17, color: info.color, lineHeight: 1.2, marginBottom: 4 }}>
+                      {a.nombre}
                     </div>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
-                      {a.mision}
-                    </p>
-                  </div>
-                  <span style={{ color: 'var(--text-muted)', fontSize: 10, flexShrink: 0, transition: 'transform 0.2s', transform: isOpen ? 'rotate(90deg)' : 'none' }}>▶</span>
-                </div>
-
-                {isOpen && (
-                  <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border)' }}>
-                    <p style={{ fontSize: 13, color: 'var(--text-dim)', lineHeight: 1.7, margin: '12px 0' }}>
-                      {a.descripcion}
-                    </p>
-                    {a.texto_versiculo && (
-                      <div onClick={() => navigate(`/biblia/leer/${a.libro_id}/${a.cap_num}`)}
-                        style={{ padding: '10px 14px', background: `${info.color}08`, border: `1px solid ${info.color}20`, borderRadius: 4, cursor: 'pointer' }}>
-                        <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: info.color, marginBottom: 4 }}>
-                          {a.libro} {a.capitulo}:{a.versiculo} →
-                        </div>
-                        <p style={{ fontFamily: 'var(--crimson)', fontSize: 14, color: 'var(--text)', lineHeight: 1.6, margin: 0 }}>
-                          {a.texto_versiculo?.substring(0, 220)}...
-                        </p>
+                    {a.tipo && (
+                      <span style={{
+                        fontFamily: 'var(--mono)', fontSize: 8, color: info.color,
+                        background: `${info.color}15`, border: `1px solid ${info.color}30`,
+                        borderRadius: 3, padding: '2px 8px', display: 'inline-block',
+                      }}>
+                        {a.tipo}
+                      </span>
+                    )}
+                    {a.cita && (
+                      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', marginTop: 6 }}>
+                        <VersiculoLink cita={a.cita} />
                       </div>
                     )}
                   </div>
+                </div>
+
+                {a.descripcion && (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 10px' }}>
+                    {a.descripcion}
+                  </p>
                 )}
+
+                <BotonPreguntarIA tipo="angel" datos={a} color={info.color} />
               </div>
             )
           })}

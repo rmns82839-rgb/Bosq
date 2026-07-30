@@ -1,95 +1,142 @@
-import { useEffect, useState } from 'react'
-import {
-  getNombresEspiritu,
-  getObrasEspiritu,
-  getSimbolosEspiritu,
-  getDonesEspiritu,
-  getFrutoEspiritu,
-  getEspirituPorLibro,
-} from '../lib/db.js'
+import { useEffect, useState, useMemo } from 'react'
+import { getEspirituSanto } from '../lib/db.js'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 
-const TABS = [
-  { key: 'nombre', label: 'Nombres', icon: '🕊️', color: '#C9A84C', fetch: getNombresEspiritu },
-  { key: 'obra', label: 'Obras', icon: '⚡', color: '#34D399', fetch: getObrasEspiritu },
-  { key: 'simbolo', label: 'Símbolos', icon: '🔥', color: '#FB923C', fetch: getSimbolosEspiritu },
-  { key: 'don', label: 'Dones', icon: '✨', color: '#60A5FA', fetch: getDonesEspiritu },
-  { key: 'fruto', label: 'Fruto', icon: '🍇', color: '#A78BFA', fetch: getFrutoEspiritu },
-  { key: 'por_libro', label: 'Por libro', icon: '📖', color: '#7EB8D4', fetch: getEspirituPorLibro },
+const SECCIONES = [
+  { key: 'nombre',    label: 'Nombres',    icon: '🕊️', color: '#C9A84C', desc: 'Cómo lo nombra la Escritura' },
+  { key: 'persona',   label: 'Es Persona', icon: '👤', color: '#7EB8D4', desc: 'Evidencias de que es una Persona, no una fuerza' },
+  { key: 'deidad',    label: 'Su deidad',  icon: '✦',  color: '#E0B0FF', desc: 'Evidencias de que es Dios' },
+  { key: 'simbolo',   label: 'Símbolos',   icon: '🔥', color: '#FB923C', desc: 'Las imágenes con que se le representa' },
+  { key: 'obra',      label: 'Su obra',    icon: '⚡', color: '#34D399', desc: 'Lo que hace en el mundo y en el creyente' },
+  { key: 'don',       label: 'Dones',      icon: '✨', color: '#60A5FA', desc: 'Los dones que reparte' },
+  { key: 'fruto',     label: 'Fruto',      icon: '🍇', color: '#A78BFA', desc: 'Gálatas 5:22-23' },
+  { key: 'pecado',    label: 'Pecados',    icon: '⚠️', color: '#F87171', desc: 'Los pecados contra el Espíritu' },
+  { key: 'por_libro', label: 'Por libro',  icon: '📖', color: '#6AAF7E', desc: 'Cómo aparece en cada libro de la Biblia' },
 ]
 
 export default function Neumatologia() {
-  const [tab, setTab] = useState('nombre')
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
-
-  const tabActual = TABS.find(t => t.key === tab)
+  const [tab, setTab] = useState('nombre')
+  const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
-    setLoading(true)
-    tabActual.fetch().then(d => { setItems(d); setLoading(false) }).catch(() => setLoading(false))
-  }, [tab])
+    getEspirituSanto().then(d => { setItems(d); setLoading(false) }).catch(() => setLoading(false))
+  }, [])
+
+  const seccion = SECCIONES.find(s => s.key === tab)
+  const contar = (key) => items.filter(i => i.categoria === key).length
+
+  const filtrados = useMemo(() => items.filter(i => {
+    if (i.categoria !== tab) return false
+    if (!busqueda) return true
+    const t = busqueda.toLowerCase()
+    return i.titulo?.toLowerCase().includes(t) || i.descripcion?.toLowerCase().includes(t)
+  }), [items, tab, busqueda])
+
+  const esPorLibro = tab === 'por_libro'
 
   return (
     <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
 
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           El Espíritu Santo
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
-          Nombres, obras, símbolos, dones y fruto del Espíritu — toca "Preguntar a la IA" para el contexto completo
+          Estudio completo: quién es, cómo lo nombra la Biblia, sus símbolos, su obra, sus dones,
+          su fruto, y cómo aparece libro por libro — toca "Preguntar a la IA" en cualquiera para profundizar
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--surface2)', padding: 4, borderRadius: 8, flexWrap: 'wrap' }}>
-        {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
-            flex: 1, minWidth: 100,
+      {/* Pestañas de sección */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 14, flexWrap: 'wrap' }}>
+        {SECCIONES.map(s => (
+          <button key={s.key} onClick={() => { setTab(s.key); setBusqueda('') }} style={{
             fontFamily: 'var(--mono)', fontSize: 10,
-            padding: '10px 12px', borderRadius: 6, border: 'none',
-            background: tab === t.key ? t.color : 'none',
-            color: tab === t.key ? 'var(--bg)' : 'var(--text-muted)',
-            cursor: 'pointer', fontWeight: tab === t.key ? 700 : 400,
+            padding: '8px 12px', borderRadius: 6,
+            border: `1px solid ${tab === s.key ? s.color : 'var(--border2)'}`,
+            background: tab === s.key ? `${s.color}20` : 'none',
+            color: tab === s.key ? s.color : 'var(--text-muted)',
+            cursor: 'pointer', fontWeight: tab === s.key ? 700 : 400,
           }}>
-            {t.icon} {t.label}
+            {s.icon} {s.label} ({contar(s.key)})
           </button>
         ))}
       </div>
 
+      {/* Descripción de la sección + buscador */}
+      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 18 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: seccion?.color, letterSpacing: '0.04em' }}>
+          {seccion?.desc}
+        </span>
+        <input
+          style={{
+            marginLeft: 'auto', background: 'var(--surface2)', border: '1px solid var(--border2)',
+            color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 12,
+            padding: '6px 12px', borderRadius: 'var(--radius)', outline: 'none', minWidth: 160,
+          }}
+          placeholder="Buscar en esta sección..."
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+        />
+      </div>
+
+      {/* Nota honesta en el recorrido libro por libro */}
+      {esPorLibro && !loading && (
+        <div style={{
+          background: 'rgba(106,175,126,0.07)',
+          borderTop: '1px solid rgba(106,175,126,0.2)', borderRight: '1px solid rgba(106,175,126,0.2)',
+          borderBottom: '1px solid rgba(106,175,126,0.2)', borderLeft: '3px solid #6AAF7E',
+          borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 16,
+        }}>
+          <p style={{ fontSize: 12, color: '#6AAF7E', lineHeight: 1.6, margin: 0 }}>
+            <strong>Nota:</strong> aquí solo aparecen los libros con mención <em>explícita</em> del Espíritu.
+            A diferencia de "Jesús en cada libro" (que es tipológico y recorre los 66), no se fuerza una
+            referencia donde el texto no la tiene: hay libros que sencillamente no lo mencionan.
+          </p>
+        </div>
+      )}
+
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 
-      {!loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {items.map((item) => (
+      {!loading && filtrados.length === 0 && (
+        <p style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text-muted)' }}>
+          No hay resultados en esta sección.
+        </p>
+      )}
+
+      {!loading && filtrados.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {filtrados.map((item) => (
             <div key={item.id} style={{
               background: 'var(--surface)',
-              borderTop: `1px solid ${tabActual.color}20`, borderRight: `1px solid ${tabActual.color}20`,
-              borderBottom: `1px solid ${tabActual.color}20`, borderLeft: `3px solid ${tabActual.color}`,
-              borderRadius: 'var(--radius)', padding: '14px 16px',
+              borderTop: `1px solid ${seccion.color}20`, borderRight: `1px solid ${seccion.color}20`,
+              borderBottom: `1px solid ${seccion.color}20`, borderLeft: `3px solid ${seccion.color}`,
+              borderRadius: 'var(--radius)', padding: '13px 16px',
               display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
             }}>
-              <div style={{ flex: 1, minWidth: 180 }}>
-                <div style={{ fontFamily: 'var(--crimson)', fontSize: 16, color: 'var(--text)', marginBottom: 4 }}>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontFamily: 'var(--crimson)', fontSize: 15.5, color: 'var(--text)', lineHeight: 1.35 }}>
                   {item.titulo}
                 </div>
-                {item.cita && (
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)' }}>
-                    <VersiculoLink cita={item.cita} />
-                  </div>
-                )}
-                {item.descripcion && (
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, margin: '4px 0 0' }}>
+                {item.descripcion && !esPorLibro && (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.55, margin: '3px 0 0' }}>
                     {item.descripcion}
                   </p>
+                )}
+                {item.cita && (
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text-muted)', marginTop: 4 }}>
+                    <VersiculoLink cita={item.cita} />
+                  </div>
                 )}
               </div>
 
               <BotonPreguntarIA
-                tipo="espiritu"
-                datos={{ ...item, categoria: tabActual.key }}
-                color={tabActual.color}
+                tipo={esPorLibro ? 'espiritu_libro' : 'espiritu'}
+                datos={item}
+                color={seccion.color}
               />
             </div>
           ))}

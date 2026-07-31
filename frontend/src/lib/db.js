@@ -311,3 +311,15 @@ export async function getEspirituSanto() {
     return [];
   }
 }
+
+// Agregar esta funciÃ³n a frontend/src/lib/db.js
+
+export async function getMilagrosJesus() {
+  try {
+    const response = await api.get('/biblia/milagros-jesus');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching milagros de jesus:', error);
+    return [];
+  }
+}

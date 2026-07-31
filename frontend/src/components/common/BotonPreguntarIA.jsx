@@ -85,6 +85,13 @@ const PREGUNTAS = {
     `1) el contexto de ese pasaje, 2) todas las demás menciones del Espíritu en ` +
     `ese mismo libro, 3) qué aspecto particular de su persona u obra se destaca ` +
     `allí, 4) cómo encaja con la enseñanza del resto de la Escritura sobre él.`,
+
+  milagro: (d) =>
+    `Explícame en profundidad el milagro de Jesús "${d.titulo}" ` +
+    `(${d.cita}${d.paralelos ? `; paralelos: ${d.paralelos}` : ''}). Dame: ` +
+    `1) el contexto en que ocurrió y a quién iba dirigido, 2) los detalles del ` +
+    `relato y las diferencias entre los Evangelios que lo cuentan, 3) qué revela ` +
+    `sobre la persona de Cristo, 4) su significado teológico y aplicación.`,
 }
 
 export default function BotonPreguntarIA({ tipo, datos, etiqueta = '🤖 Preguntar a la IA', color }) {

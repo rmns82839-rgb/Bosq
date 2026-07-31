@@ -1,35 +1,42 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useLayoutEffect, useCallback } from 'react';
 import Modal from '../common/Modal';
 
 /**
  * Superficie de escritura sin caja: crece hacia abajo con el contenido,
- * nunca tiene scroll interno (así siempre ves todo lo que escribiste,
- * desde la primera línea). Incluye el botón para insertar notas en
- * cualquier punto del texto.
+ * nunca tiene scroll interno — siempre ves todo lo que escribiste, desde
+ * la primera línea.
  *
- * La nota queda incrustada en el mismo texto como ⟦contenido⟧. En el
- * bosquejo final eso se convierte en un pequeño 📝 justo en ese punto.
+ * Los estilos críticos van EN LÍNEA a propósito (overflow, resize, height):
+ * si dependieran de una hoja de estilos, cualquier regla que llegara
+ * después podría reimponer un alto fijo y el campo volvería a esconder
+ * el texto. Así el comportamiento queda garantizado.
  */
 export default function CampoTexto({ value, onChange, placeholder, minRows = 2, className = '' }) {
   const taRef = useRef(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [borrador, setBorrador] = useState('');
 
-  // Ajusta la altura al contenido real. Se llama al escribir, al montar,
-  // y cuando cambia el ancho de la ventana (porque al refluir el texto
-  // cambia el número de líneas).
   const ajustar = useCallback(() => {
     const el = taRef.current;
     if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
+    el.style.height = 'auto';                    // suelta el alto anterior
+    el.style.height = `${el.scrollHeight}px`;    // y toma el del contenido real
   }, []);
 
-  useEffect(() => { ajustar(); }, [value, ajustar]);
+  // useLayoutEffect: ajusta ANTES de pintar, para que no se vea el salto.
+  useLayoutEffect(() => { ajustar(); });
 
-  useEffect(() => {
-    window.addEventListener('resize', ajustar);
-    return () => window.removeEventListener('resize', ajustar);
+  // El texto refluye si cambia el ancho (girar el teléfono, cambiar de
+  // diapositiva, abrir el teclado): hay que recalcular el alto.
+  useLayoutEffect(() => {
+    const el = taRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', ajustar);
+      return () => window.removeEventListener('resize', ajustar);
+    }
+    const ro = new ResizeObserver(ajustar);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [ajustar]);
 
   const abrirModal = () => {
@@ -52,6 +59,7 @@ export default function CampoTexto({ value, onChange, placeholder, minRows = 2, 
       el.focus();
       const pos = inicio + marcador.length;
       el.setSelectionRange(pos, pos);
+      ajustar();
     });
   };
 
@@ -62,8 +70,16 @@ export default function CampoTexto({ value, onChange, placeholder, minRows = 2, 
         rows={minRows}
         value={value || ''}
         placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => { onChange(e.target.value); ajustar(); }}
+        onInput={ajustar}
         className={`be-texto-libre ${className}`}
+        style={{
+          overflowY: 'hidden',   // sin scroll interno: el campo crece
+          resize: 'none',
+          minHeight: 0,
+          maxHeight: 'none',
+          boxSizing: 'border-box',
+        }}
       />
       <button type="button" className="be-btn-insertar-nota" onClick={abrirModal}>
         📝 + Nota aquí
@@ -75,11 +91,7 @@ export default function CampoTexto({ value, onChange, placeholder, minRows = 2, 
         titulo="Insertar nota"
         footer={
           <>
-            <button
-              type="button"
-              className="nota-btn nota-btn-plano"
-              onClick={() => setModalAbierto(false)}
-            >
+            <button type="button" className="nota-btn nota-btn-plano" onClick={() => setModalAbierto(false)}>
               Cancelar
             </button>
             <button

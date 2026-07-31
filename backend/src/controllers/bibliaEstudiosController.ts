@@ -140,3 +140,14 @@ export const getEspirituSantoTodo = async (_req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al obtener el estudio del Espíritu Santo' });
   }
 };
+
+// ─── MILAGROS DE JESÚS ────────────────────────────────────────────
+export const getMilagrosJesus = async (_req: Request, res: Response) => {
+  try {
+    const milagros = await prisma.milagroJesus.findMany({ orderBy: { categoria: 'asc' } });
+    res.json(milagros);
+  } catch (error) {
+    console.error('Error fetching milagros de jesus:', error);
+    res.status(500).json({ error: 'Error al obtener los milagros de Jesús' });
+  }
+};

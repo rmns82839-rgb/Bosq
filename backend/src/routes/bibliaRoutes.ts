@@ -18,6 +18,7 @@ import {
   getJesusEnLibros,
   getPatronesBiblicos,
   getEspirituSantoTodo,
+  getMilagrosJesus,
 } from '../controllers/bibliaEstudiosController';
 import { authMiddleware } from '../middleware/auth';
 
@@ -46,5 +47,6 @@ router.get('/espiritu-por-libro', getEspirituPorLibro);
 router.get('/jesus-en-libros', getJesusEnLibros);
 router.get('/patrones-biblicos', getPatronesBiblicos);
 router.get('/espiritu-santo', getEspirituSantoTodo);
+router.get('/milagros-jesus', getMilagrosJesus);
 
 export default router;

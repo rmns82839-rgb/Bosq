@@ -92,6 +92,7 @@ model Rey {
 model ProfeciaMesianica {
   id               String   @id @default(cuid())
   tema             String
+  categoria        String?
   citaProfecia     String
   citaCumplimiento String?
   createdAt        DateTime @default(now())
@@ -156,4 +157,16 @@ model PatronBiblico {
   createdAt   DateTime @default(now())
 
   @@map("patrones_biblicos")
+}
+
+model MilagroJesus {
+  id          String   @id @default(cuid())
+  titulo      String
+  categoria   String
+  cita        String
+  paralelos   String?
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  @@map("milagros_jesus")
 }

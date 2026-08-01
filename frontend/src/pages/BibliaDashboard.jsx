@@ -12,37 +12,38 @@ const modulos = [
   { titulo: 'Reyes de Israel', descripcion: 'Timeline paralelo de reyes de Israel y Judá', emoji: '👑', ruta: '/biblia/reyes' },
   { titulo: 'Estudios Especiales', descripcion: 'Palabras de Jesús, profecías y juicios', emoji: '⭐', ruta: '/biblia/especiales' },
   { titulo: 'Patrones Bíblicos', descripcion: 'Patrones literarios y estructurales en la Biblia', emoji: '📊', ruta: '/biblia/patrones' },
-  { titulo: 'Tabernáculo', descripcion: 'El tabernáculo y las figuras de la Iglesia como tipos de Cristo', emoji: '🏕️', ruta: '/biblia/tabernaculo' },
+  { titulo: 'Tabernáculo', descripcion: 'El tabernáculo y las figuras de la Iglesia como tipos de Cristo', emoji: '🏛️', ruta: '/biblia/tabernaculo' },
 ];
 
 const BibliaDashboard = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0a0a] via-[#0f0f1a] to-[#1a1a2e]">
       <Header />
-      <div className="max-w-4xl mx-auto p-4 sm:p-6">
+      <div className="max-w-5xl mx-auto p-4 sm:p-6">
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 dark:text-white">
-            📚 Biblioteca Bíblica
+          <h1 className="text-3xl sm:text-4xl font-serif font-light text-white">
+            Biblioteca Bíblica <span className="text-[#C9A84C]">✦</span>
           </h1>
-          <p className="mt-1 text-gray-600 dark:text-gray-400">
+          <p className="mt-1 text-white/40 font-light">
             Reina Valera 1960 — Selecciona un módulo de estudio
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {modulos.map((m) => (
             <button
               key={m.ruta}
               onClick={() => m.externo ? window.open(m.ruta, '_blank', 'noopener,noreferrer') : navigate(m.ruta)}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-left hover:shadow-lg hover:border-primary-400 border-2 border-transparent transition-all duration-200 group"
+              className="bg-white/[0.03] border border-white/10 rounded-2xl p-6 text-left
+                         hover:border-[#C9A84C]/40 hover:bg-white/[0.06] transition-all duration-200 group"
             >
               <div className="text-4xl mb-3">{m.emoji}</div>
-              <h2 className="text-lg font-serif font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                {m.titulo}{m.externo && <span className="ml-1 text-xs align-super">↗</span>}
+              <h2 className="text-lg font-serif font-medium text-white group-hover:text-[#C9A84C] transition-colors">
+                {m.titulo}{m.externo && <span className="ml-1 text-xs align-super text-[#C9A84C]">↗</span>}
               </h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-white/40 font-light">
                 {m.descripcion}
               </p>
             </button>

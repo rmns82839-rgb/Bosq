@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
-import { 
-  BookOpen, 
-  Search, 
-  LogOut, 
-  ChevronDown, 
+import {
+  BookOpen,
+  Search,
+  LogOut,
+  ChevronDown,
   Menu,
   User,
   Book,
@@ -49,21 +49,21 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
+    <header className="bg-[#0b0b14] border-b border-white/10 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <span className="text-xl sm:text-2xl font-cursive text-primary-600 dark:text-primary-400">
+            <span className="text-xl sm:text-2xl font-cursive text-[#C9A84C]">
               ✝️ Bosqu
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            <Link 
-              to="/bosquejos" 
-              className="flex items-center p-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            <Link
+              to="/bosquejos"
+              className="flex items-center p-2 text-white/60 hover:text-[#C9A84C] rounded-lg hover:bg-white/5 transition-colors"
             >
               <BookOpen className="w-5 h-5 mr-1" />
               <span className="text-sm">Bosquejos</span>
@@ -73,7 +73,7 @@ const Header = () => {
             <div className="relative">
               <button
                 onClick={() => setMenuBibliaOpen(!menuBibliaOpen)}
-                className="flex items-center p-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center p-2 text-white/60 hover:text-[#C9A84C] rounded-lg hover:bg-white/5 transition-colors"
               >
                 <Search className="w-5 h-5 mr-1" />
                 <span className="text-sm">Biblia</span>
@@ -81,10 +81,10 @@ const Header = () => {
               </button>
 
               {menuBibliaOpen && (
-                <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 border border-gray-200 dark:border-gray-700 z-50">
+                <div className="absolute right-0 mt-1 w-56 bg-[#15172a] rounded-xl shadow-2xl py-1 border border-white/10 z-50">
                   <button
                     onClick={abrirBiblia}
-                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-[#C9A84C] transition-colors"
                   >
                     <span>📖</span> Leer la Biblia <span className="ml-auto text-xs">↗</span>
                   </button>
@@ -93,7 +93,7 @@ const Header = () => {
                       key={m.label}
                       to={m.ruta}
                       onClick={() => setMenuBibliaOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-[#C9A84C] transition-colors"
                     >
                       <span>{m.emoji}</span> {m.label}
                     </Link>
@@ -102,9 +102,9 @@ const Header = () => {
               )}
             </div>
 
-            <button 
-              onClick={handleLogout} 
-              className="flex items-center p-2 text-gray-600 dark:text-gray-300 hover:text-red-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            <button
+              onClick={handleLogout}
+              className="flex items-center p-2 text-white/60 hover:text-red-400 rounded-lg hover:bg-white/5 transition-colors"
             >
               <LogOut className="w-5 h-5 mr-1" />
               <span className="text-sm">Salir</span>
@@ -114,7 +114,7 @@ const Header = () => {
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="md:hidden p-2 text-white/60 hover:text-[#C9A84C] rounded-lg hover:bg-white/5 transition-colors"
           >
             <Menu className="w-6 h-6" />
           </button>
@@ -122,40 +122,40 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden py-2 border-t border-gray-200 dark:border-gray-700">
+          <div className="md:hidden py-2 border-t border-white/10">
             <Link
               to="/bosquejos"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-white/70 hover:bg-white/5 rounded-lg transition-colors"
             >
               <BookOpen className="w-5 h-5" /> Bosquejos
             </Link>
-            
-            <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+
+            <div className="px-4 py-2 text-xs font-semibold text-white/40 uppercase tracking-wider">
               Biblia
             </div>
 
             <button
               onClick={abrirBiblia}
-              className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors pl-8"
+              className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:bg-white/5 rounded-lg transition-colors pl-8"
             >
               <span>📖</span> Leer la Biblia <span className="ml-auto text-xs">↗</span>
             </button>
-            
+
             {modulosBiblia.map((m) => (
               <Link
                 key={m.label}
                 to={m.ruta}
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors pl-8"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-white/70 hover:bg-white/5 rounded-lg transition-colors pl-8"
               >
                 <span>{m.emoji}</span> {m.label}
               </Link>
             ))}
-            
+
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors w-full"
+              className="flex items-center gap-2 px-4 py-2 text-red-400 hover:bg-white/5 rounded-lg transition-colors w-full"
             >
               <LogOut className="w-5 h-5" /> Cerrar sesión
             </button>

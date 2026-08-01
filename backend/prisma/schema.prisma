@@ -170,3 +170,28 @@ model MilagroJesus {
 
   @@map("milagros_jesus")
 }
+
+model ElementoTabernaculo {
+  id              String   @id @default(cuid())
+  nombre          String
+  seccion         String   // atrio | lugar_santo | lugar_santisimo | estructura | sacerdocio
+  cita            String?
+  tipologiaCristo String?
+  descripcion     String?
+  orden           Int?
+  createdAt       DateTime @default(now())
+
+  @@map("elementos_tabernaculo")
+}
+
+model FiguraIglesia {
+  id               String   @id @default(cuid())
+  nombre           String
+  cita             String?
+  cristoEnLaFigura String?
+  descripcion      String?
+  orden            Int?
+  createdAt        DateTime @default(now())
+
+  @@map("figuras_iglesia")
+}

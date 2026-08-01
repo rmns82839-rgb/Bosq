@@ -22,7 +22,7 @@ import Especiales from './pages/Especiales';
 import Patrones from './pages/Patrones';
 import JesusEnLibros from './pages/JesusEnLibros';
 import BibliaLayout from './components/biblia/BibliaLayout';
-
+import Tabernaculo from './pages/Tabernaculo';
 
 import BibliaDashboard from './pages/BibliaDashboard';
 
@@ -55,7 +55,7 @@ function App() {
           
 
           {/* Biblia - Estudios */}
-          
+          <Route path="/biblia/tabernaculo" element={<ProtectedRoute><BibliaLayout titulo="Tabernáculo"><Tabernaculo /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/angelologia" element={<ProtectedRoute><BibliaLayout titulo="Angelología"><Angelologia /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/cristologia" element={<ProtectedRoute><BibliaLayout titulo="Cristología"><Cristologia /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/numerologia" element={<ProtectedRoute><BibliaLayout titulo="Numerología"><Numerologia /></BibliaLayout></ProtectedRoute>} />

@@ -92,6 +92,23 @@ const PREGUNTAS = {
     `1) el contexto en que ocurrió y a quién iba dirigido, 2) los detalles del ` +
     `relato y las diferencias entre los Evangelios que lo cuentan, 3) qué revela ` +
     `sobre la persona de Cristo, 4) su significado teológico y aplicación.`,
+
+  tabernaculo: (d) =>
+    `Explícame en profundidad el elemento del tabernáculo "${d.nombre}" ` +
+    `(sección: ${d.seccion})${d.tipologiaCristo ? `, que se asocia con Cristo como ${d.tipologiaCristo}` : ''}. ` +
+    `Dame: 1) su descripción y función según Éxodo/Levítico, 2) sus materiales y simbolismo, ` +
+    `3) cómo tipifica a Cristo o su obra según el Nuevo Testamento (especialmente Hebreos), ` +
+    `4) una aclaración honesta de si la tipología es explícita en la Escritura o es tradicional. ` +
+    `Cita de referencia: ${d.cita || 'no especificada'}.`,
+
+  figura_iglesia: (d) =>
+    `En la Biblia, la Iglesia es representada como "${d.nombre}"` +
+    `${d.cristoEnLaFigura ? `, imagen en la que Cristo es ${d.cristoEnLaFigura}` : ''}. ` +
+    `Explícame en profundidad: 1) dónde aparece esta imagen en la Escritura, ` +
+    `2) qué enseña sobre la naturaleza y misión de la Iglesia, ` +
+    `3) cómo se relaciona Cristo con la Iglesia en esa figura, ` +
+    `4) su aplicación práctica para la iglesia hoy. ` +
+    `Cita de referencia: ${d.cita || 'no especificada'}.`,
 }
 
 export default function BotonPreguntarIA({ tipo, datos, etiqueta = '🤖 Preguntar a la IA', color }) {

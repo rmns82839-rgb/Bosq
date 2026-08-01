@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { getProfecias, getJuicios, getMilagrosJesus } from '../lib/db.js'
+import { getProfecias, getJuicios, getMilagrosJesus } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 

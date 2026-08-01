@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getJesusEnLibros } from '../lib/db.js'
+import { getJesusEnLibros } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 

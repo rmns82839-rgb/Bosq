@@ -151,3 +151,25 @@ export const getMilagrosJesus = async (_req: Request, res: Response) => {
     res.status(500).json({ error: 'Error al obtener los milagros de Jesús' });
   }
 };
+
+// ─── TABERNÁCULO / TEMPLO ─────────────────────────────────────────
+export const getElementosTabernaculo = async (_req: Request, res: Response) => {
+  try {
+    const elementos = await prisma.elementoTabernaculo.findMany({ orderBy: { orden: 'asc' } });
+    res.json(elementos);
+  } catch (error) {
+    console.error('Error fetching elementos tabernaculo:', error);
+    res.status(500).json({ error: 'Error al obtener los elementos del tabernáculo' });
+  }
+};
+
+// ─── FIGURAS DE LA IGLESIA ────────────────────────────────────────
+export const getFigurasIglesia = async (_req: Request, res: Response) => {
+  try {
+    const figuras = await prisma.figuraIglesia.findMany({ orderBy: { orden: 'asc' } });
+    res.json(figuras);
+  } catch (error) {
+    console.error('Error fetching figuras iglesia:', error);
+    res.status(500).json({ error: 'Error al obtener las figuras de la Iglesia' });
+  }
+};

@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { getEspirituSanto } from '../lib/db.js'
+import { getEspirituSanto } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 

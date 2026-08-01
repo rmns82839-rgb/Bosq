@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getReyes } from '../lib/db.js'
+import { getReyes } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 import LineaTiempoReyes from '../components/reyes/LineaTiempoReyes'

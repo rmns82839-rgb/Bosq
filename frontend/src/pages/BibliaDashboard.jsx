@@ -11,7 +11,8 @@ const modulos = [
   { titulo: 'Jesús en Cada Libro', descripcion: 'Cómo se anticipa o se revela a Cristo en los 66 libros', emoji: '🗝️', ruta: '/biblia/jesus-en-libros' },
   { titulo: 'Reyes de Israel', descripcion: 'Timeline paralelo de reyes de Israel y Judá', emoji: '👑', ruta: '/biblia/reyes' },
   { titulo: 'Estudios Especiales', descripcion: 'Palabras de Jesús, profecías y juicios', emoji: '⭐', ruta: '/biblia/especiales' },
-  { titulo: 'Patrones Bíblicos', descripcion: 'Frecuencia de palabras y patrones en la Biblia', emoji: '📊', ruta: '/biblia/patrones' },
+  { titulo: 'Patrones Bíblicos', descripcion: 'Patrones literarios y estructurales en la Biblia', emoji: '📊', ruta: '/biblia/patrones' },
+  { titulo: 'Tabernáculo', descripcion: 'El tabernáculo y las figuras de la Iglesia como tipos de Cristo', emoji: '🏕️', ruta: '/biblia/tabernaculo' },
 ];
 
 const BibliaDashboard = () => {

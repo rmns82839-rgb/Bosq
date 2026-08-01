@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getPatronesBiblicos } from '../lib/db.js'
+import { getPatronesBiblicos } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 

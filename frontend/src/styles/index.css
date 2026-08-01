@@ -24,6 +24,24 @@
                        linear-gradient(90deg, rgba(200, 0, 0, 0.12) 1px, transparent 1px);
   --notebook-bg-size: 100% 28px, 55px 100%;
   --notebook-bg-position: 0 0, 30px 0;
+
+  /* ===== TOKENS DE LA BIBLIOTECA DE ESTUDIO =====
+     Las páginas de estudio (Angelología, Reyes, Tabernáculo…) viven dentro
+     de BibliaLayout, que tiene fondo oscuro. Usaban estas variables SIN estar
+     definidas — por eso los títulos salían sin dorado, las tarjetas sin fondo
+     ni bordes redondeados, y el contraste en oscuro era pobre. */
+  --bg:        #0f0f1a;
+  --surface:   #15172a;
+  --surface2:  #1e2138;
+  --border2:   rgba(255, 255, 255, 0.12);
+  --text:      #ece9e1;
+  --text-dim:  #b8b4c4;
+  --gold:      #C9A84C;
+  --gold-glow: rgba(201, 168, 76, 0.14);
+  --radius:    12px;
+  --crimson:   'Lora', Georgia, serif;
+  --sans:      system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:      'JetBrains Mono', ui-monospace, 'Courier New', monospace;
 }
 
 /* ===== MODO OSCURO ===== */

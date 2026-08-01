@@ -20,8 +20,6 @@ import {
 } from 'lucide-react';
 
 const modulosBiblia = [
-  { emoji: '📖', label: 'Leer', ruta: '/biblia/leer/1', icon: Book },
-  { emoji: '🔍', label: 'Buscar', ruta: '/buscar-biblia', icon: Search },
   { emoji: '😇', label: 'Ángeles', ruta: '/biblia/angelologia', icon: UserCircle },
   { emoji: '✝️', label: 'Cristo', ruta: '/biblia/cristologia', icon: Church },
   { emoji: '🔢', label: 'Números', ruta: '/biblia/numerologia', icon: Book },
@@ -42,6 +40,12 @@ const Header = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const abrirBiblia = () => {
+    window.open('https://www.bible.com/bible/149/GEN.1.RVR1960', '_blank', 'noopener,noreferrer');
+    setMenuBibliaOpen(false);
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -78,9 +82,15 @@ const Header = () => {
 
               {menuBibliaOpen && (
                 <div className="absolute right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 border border-gray-200 dark:border-gray-700 z-50">
+                  <button
+                    onClick={abrirBiblia}
+                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <span>📖</span> Leer la Biblia <span className="ml-auto text-xs">↗</span>
+                  </button>
                   {modulosBiblia.map((m) => (
                     <Link
-                      key={m.ruta}
+                      key={m.label}
                       to={m.ruta}
                       onClick={() => setMenuBibliaOpen(false)}
                       className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -124,20 +134,24 @@ const Header = () => {
             <div className="px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Biblia
             </div>
+
+            <button
+              onClick={abrirBiblia}
+              className="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors pl-8"
+            >
+              <span>📖</span> Leer la Biblia <span className="ml-auto text-xs">↗</span>
+            </button>
             
-            {modulosBiblia.map((m) => {
-              const IconComponent = m.icon;
-              return (
-                <Link
-                  key={m.ruta}
-                  to={m.ruta}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors pl-8"
-                >
-                  <span>{m.emoji}</span> {m.label}
-                </Link>
-              );
-            })}
+            {modulosBiblia.map((m) => (
+              <Link
+                key={m.label}
+                to={m.ruta}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors pl-8"
+              >
+                <span>{m.emoji}</span> {m.label}
+              </Link>
+            ))}
             
             <button
               onClick={handleLogout}

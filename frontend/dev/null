@@ -1,0 +1,29 @@
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useAuthStore } from "./stores/authStore";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Bosquejos from "./pages/Bosquejos";
+import NuevoBosquejo from "./pages/NuevoBosquejo";
+import EditarBosquejo from "./pages/EditarBosquejo";
+import VerBosquejo from "./pages/VerBosquejo";
+import Angelologia from "./pages/Angelologia";
+import Cristologia from "./pages/Cristologia";
+import Numerologia from "./pages/Numerologia";
+import Neumatologia from "./pages/Neumatologia";
+import Reyes from "./pages/Reyes";
+import Especiales from "./pages/Especiales";
+import Patrones from "./pages/Patrones";
+import JesusEnLibros from "./pages/JesusEnLibros";
+import BibliaLayout from "./components/biblia/BibliaLayout";
+import BibliaDashboard from "./pages/BibliaDashboard";
+const queryClient = new QueryClient();
+function App() {
+  const { token } = useAuthStore();
+  return /* @__PURE__ */ React.createElement(QueryClientProvider, { client: queryClient }, /* @__PURE__ */ React.createElement(BrowserRouter, { future: { v7_startTransition: true, v7_relativeSplatPath: true } }, /* @__PURE__ */ React.createElement(Toaster, { position: "top-right" }), /* @__PURE__ */ React.createElement(Routes, null, /* @__PURE__ */ React.createElement(Route, { path: "/login", element: token ? /* @__PURE__ */ React.createElement(Navigate, { to: "/" }) : /* @__PURE__ */ React.createElement(Login, null) }), /* @__PURE__ */ React.createElement(Route, { path: "/register", element: token ? /* @__PURE__ */ React.createElement(Navigate, { to: "/" }) : /* @__PURE__ */ React.createElement(Register, null) }), /* @__PURE__ */ React.createElement(Route, { path: "/", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(Dashboard, null)) }), /* @__PURE__ */ React.createElement(Route, { path: "/bosquejos", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(Bosquejos, null)) }), /* @__PURE__ */ React.createElement(Route, { path: "/bosquejos/nuevo", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(NuevoBosquejo, null)) }), /* @__PURE__ */ React.createElement(Route, { path: "/bosquejos/:id", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(VerBosquejo, null)) }), /* @__PURE__ */ React.createElement(Route, { path: "/bosquejos/:id/editar", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(EditarBosquejo, null)) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaDashboard, null)) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia/angelologia", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaLayout, { titulo: "Angelolog\xEDa" }, /* @__PURE__ */ React.createElement(Angelologia, null))) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia/cristologia", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaLayout, { titulo: "Cristolog\xEDa" }, /* @__PURE__ */ React.createElement(Cristologia, null))) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia/numerologia", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaLayout, { titulo: "Numerolog\xEDa" }, /* @__PURE__ */ React.createElement(Numerologia, null))) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia/neumatologia", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaLayout, { titulo: "Neumatolog\xEDa" }, /* @__PURE__ */ React.createElement(Neumatologia, null))) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia/reyes", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaLayout, { titulo: "Reyes" }, /* @__PURE__ */ React.createElement(Reyes, null))) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia/especiales", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaLayout, { titulo: "Estudios Especiales" }, /* @__PURE__ */ React.createElement(Especiales, null))) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia/jesus-en-libros", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaLayout, { titulo: "Jes\xFAs en Cada Libro" }, /* @__PURE__ */ React.createElement(JesusEnLibros, null))) }), /* @__PURE__ */ React.createElement(Route, { path: "/biblia/patrones", element: /* @__PURE__ */ React.createElement(ProtectedRoute, null, /* @__PURE__ */ React.createElement(BibliaLayout, { titulo: "Patrones" }, /* @__PURE__ */ React.createElement(Patrones, null))) }))));
+}
+export default App;

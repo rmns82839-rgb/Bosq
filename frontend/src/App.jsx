@@ -22,6 +22,8 @@ import Especiales from './pages/Especiales';
 import Patrones from './pages/Patrones';
 import JesusEnLibros from './pages/JesusEnLibros';
 import BibliaLayout from './components/biblia/BibliaLayout';
+
+
 import BibliaDashboard from './pages/BibliaDashboard';
 
 
@@ -45,6 +47,7 @@ function App() {
           <Route path="/bosquejos/nuevo" element={<ProtectedRoute><NuevoBosquejo /></ProtectedRoute>} />
           <Route path="/bosquejos/:id" element={<ProtectedRoute><VerBosquejo /></ProtectedRoute>} />
           <Route path="/bosquejos/:id/editar" element={<ProtectedRoute><EditarBosquejo /></ProtectedRoute>} />
+          
 
           {/* Biblia - Dashboard */}
           <Route path="/biblia" element={<ProtectedRoute><BibliaDashboard /></ProtectedRoute>} />
@@ -52,6 +55,7 @@ function App() {
           
 
           {/* Biblia - Estudios */}
+          
           <Route path="/biblia/angelologia" element={<ProtectedRoute><BibliaLayout titulo="Angelología"><Angelologia /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/cristologia" element={<ProtectedRoute><BibliaLayout titulo="Cristología"><Cristologia /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/numerologia" element={<ProtectedRoute><BibliaLayout titulo="Numerología"><Numerologia /></BibliaLayout></ProtectedRoute>} />

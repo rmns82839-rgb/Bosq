@@ -28,6 +28,7 @@ const modulosBiblia = [
   { emoji: '👑', label: 'Reyes', ruta: '/biblia/reyes', icon: Crown },
   { emoji: '🗝️', label: 'Jesús×Libro', ruta: '/biblia/jesus-en-libros', icon: Key },
   { emoji: '⭐', label: 'Estudios', ruta: '/biblia/especiales', icon: Star },
+  { emoji: '🏛️', label: 'Tabernáculo y Templo', ruta: '/biblia/tabernaculo-templo', icon: Building2 },
   { emoji: '📊', label: 'Patrones', ruta: '/biblia/patrones', icon: BarChart3 },
 ];
 

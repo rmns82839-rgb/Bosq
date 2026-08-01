@@ -173,3 +173,35 @@
 .be-premium .be-campo-suelto {
   margin-bottom: 16px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ANULACIÓN DE LA REGLA GLOBAL DE index.css
+   Allí hay un `input, textarea { border-bottom; padding }` y un
+   `textarea { min-height: 40px; overflow-y: auto; resize: vertical;
+   flex: 1 }` que aplican a TODA la app — de ahí venían la caja y el
+   scroll interno. Aquí se anulan por completo para los campos del
+   editor, propiedad por propiedad.
+   ═══════════════════════════════════════════════════════════════ */
+.be-premium textarea.be-texto-libre,
+.be-premium .be-campo-notas textarea.be-texto-libre {
+  min-height: 0;
+  height: auto;
+  flex: none;
+  resize: none;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  padding: 2px 0;
+  border: none;
+  border-bottom: none;
+  background: transparent;
+  box-shadow: none;
+  width: 100%;
+  display: block;
+}
+
+.be-premium textarea.be-texto-libre:focus {
+  border: none;
+  border-bottom: none;
+  outline: none;
+  box-shadow: 0 1px 0 0 color-mix(in srgb, var(--purpura) 30%, transparent);
+}

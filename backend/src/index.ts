@@ -5,7 +5,7 @@ import authRoutes from './routes/authRoutes';
 import bosquejoRoutes from './routes/bosquejoRoutes';
 import bibliaRoutes from './routes/bibliaRoutes';
 import { errorHandler } from './middleware/errorHandler';
-import iaRoutes from './routes/iaRoutes';
+
 
 
 dotenv.config();
@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/bosquejos', bosquejoRoutes);
 app.use('/api/biblia', bibliaRoutes);
-app.use('/api/ia', iaRoutes);
+
 
 
 

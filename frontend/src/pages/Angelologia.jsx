@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getAngeles } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
+import Chip from '../components/ui/Chip'
 
 const TIPOS = {
   'arcángel':           { color: '#C9A84C', icon: '⚔️' },
@@ -38,10 +39,10 @@ export default function Angelologia() {
   })
 
   return (
-    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 32px) 100px', maxWidth: 900, minWidth: 0 }}>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 'clamp(26px, 6vw, 36px)', color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           Angelología Bíblica
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -49,29 +50,26 @@ export default function Angelologia() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-        <input
-          style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '8px 14px', borderRadius: 'var(--radius)', outline: 'none', minWidth: 180 }}
-          placeholder="Buscar ángel..."
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-        />
-        <button onClick={() => setFiltroTipo('todos')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${filtroTipo === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
-          background: filtroTipo === 'todos' ? 'var(--gold-glow)' : 'none',
-          color: filtroTipo === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-        }}>Todos ({angeles.length})</button>
+      {/* Buscador: fila propia, ancho completo en móvil */}
+      <input
+        style={{ width: '100%', maxWidth: 320, boxSizing: 'border-box', background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '10px 14px', borderRadius: 'var(--radius)', outline: 'none', marginBottom: 12 }}
+        placeholder="Buscar ángel..."
+        value={busqueda}
+        onChange={e => setBusqueda(e.target.value)}
+      />
+
+      {/* Chips: fila que envuelve pareja */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20 }}>
+        <Chip activo={filtroTipo === 'todos'} onClick={() => setFiltroTipo('todos')}>
+          Todos ({angeles.length})
+        </Chip>
         {tipos.map(t => {
           const info = TIPOS[t] || { color: 'var(--text-muted)', icon: '•' }
           const count = angeles.filter(a => a.tipo === t).length
           return (
-            <button key={t} onClick={() => setFiltroTipo(t)} style={{
-              fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
-              border: `1px solid ${filtroTipo === t ? info.color : 'var(--border2)'}`,
-              background: filtroTipo === t ? `${info.color}18` : 'none',
-              color: filtroTipo === t ? info.color : 'var(--text-muted)', cursor: 'pointer',
-            }}>{info.icon} {t} ({count})</button>
+            <Chip key={t} activo={filtroTipo === t} color={info.color} onClick={() => setFiltroTipo(t)}>
+              {info.icon} {t} ({count})
+            </Chip>
           )
         })}
       </div>
@@ -83,7 +81,7 @@ export default function Angelologia() {
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 
       {!loading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: 12 }}>
           {filtrados.map((a) => {
             const info = TIPOS[a.tipo] || { color: 'var(--gold)', icon: '👼' }
             return (
@@ -98,7 +96,7 @@ export default function Angelologia() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
                   <span style={{ fontSize: 20 }}>{info.icon}</span>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--crimson)', fontSize: 17, color: info.color, lineHeight: 1.2, marginBottom: 4 }}>
                       {a.nombre}
                     </div>

@@ -63,6 +63,7 @@ const EditarBosquejo = () => {
         conclusion: codificarSeccion(datos.conclusion),
       };
       await updateBosquejo(id, payload);
+      try { localStorage.removeItem(`bosqu_borrador_${id}`); } catch {}
       toast.success('Cambios guardados');
       navigate(`/bosquejos/${id}`);
     } catch {
@@ -99,6 +100,7 @@ const EditarBosquejo = () => {
       onGuardar={handleGuardar}
       onCancelar={() => navigate(`/bosquejos/${id}`)}
       guardando={guardando}
+      draftKey={id}
     />
   );
 };

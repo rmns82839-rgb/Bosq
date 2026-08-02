@@ -186,9 +186,44 @@ export default function BosquejoEditor({
   onCancelar,
   guardando = false,
   titulo = 'Nuevo bosquejo',
+  draftKey = null,
 }) {
   const diapoRef = useRef(null);
   const enfocarIdRef = useRef(null);
+
+  // ── Autoguardado en borrador local (localStorage) ──
+  // Mientras escribes, se guarda un borrador cada 700ms. Si cierras sin
+  // guardar y vuelves, un aviso te ofrece recuperarlo. No toca la red ni la BD.
+  const DRAFT_KEY = draftKey ? `bosqu_borrador_${draftKey}` : null;
+  const [borradorPendiente, setBorradorPendiente] = useState(null);
+  const [borradorGuardado, setBorradorGuardado] = useState(false);
+  const primeraVez = useRef(true);
+
+  useEffect(() => {
+    if (!DRAFT_KEY) return;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft?.datos && JSON.stringify(draft.datos) !== JSON.stringify(datos)) {
+          setBorradorPendiente(draft);
+        }
+      }
+    } catch { /* localStorage no disponible */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!DRAFT_KEY) return;
+    if (primeraVez.current) { primeraVez.current = false; return; }
+    const t = setTimeout(() => {
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ datos, ts: Date.now() }));
+        setBorradorGuardado(true);
+      } catch { /* localStorage lleno o bloqueado */ }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [datos, DRAFT_KEY]);
 
   const puntos = useMemo(() => normalizar(datos.puntos), [datos.puntos]);
 
@@ -443,6 +478,7 @@ export default function BosquejoEditor({
           <h1 className="be-encabezado-titulo" style={{ fontSize: '1.3rem' }}>{titulo}</h1>
           <p className="be-encabezado-nota">
             {totalPuntos} {totalPuntos === 1 ? 'punto' : 'puntos'} · desliza para navegar
+            {borradorGuardado && <span style={{ opacity: 0.7 }}> · borrador guardado ✓</span>}
           </p>
         </div>
         <div className="be-encabezado-acciones">
@@ -460,6 +496,30 @@ export default function BosquejoEditor({
           </button>
         </div>
       </header>
+
+      {borradorPendiente && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+          padding: '10px 16px', background: 'rgba(201,168,76,0.14)',
+          borderBottom: '1px solid rgba(201,168,76,0.35)', fontSize: 13, flexShrink: 0,
+        }}>
+          <span style={{ flex: 1, minWidth: 160 }}>📝 Tienes cambios sin guardar de una sesión anterior.</span>
+          <button
+            type="button"
+            className="be-btn be-btn-principal"
+            onClick={() => { onChange(borradorPendiente.datos); setBorradorPendiente(null); }}
+          >
+            Recuperar
+          </button>
+          <button
+            type="button"
+            className="be-btn be-btn-plano"
+            onClick={() => { try { localStorage.removeItem(DRAFT_KEY); } catch {} setBorradorPendiente(null); }}
+          >
+            Descartar
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 min-h-0">
         <Diapositivas ref={diapoRef} slides={slides} renderSlide={renderSlide} />

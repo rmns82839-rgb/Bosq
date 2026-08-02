@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { getPatronesBiblicos } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
+import Chip from '../components/ui/Chip'
+import FiltrosDesplegable from '../components/ui/FiltrosDesplegable'
 
 const CATEGORIAS = {
   estructura: { color: '#60A5FA', icon: '🔷', label: 'Estructura literaria' },
@@ -39,10 +41,10 @@ export default function Patrones() {
   }
 
   return (
-    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 32px) 100px', maxWidth: 900, minWidth: 0 }}>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 'clamp(26px, 6vw, 36px)', color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           Patrones Bíblicos
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -74,7 +76,7 @@ export default function Patrones() {
             onClick={() => analizarPalabra(palabra)}
             disabled={!palabra.trim()}
             style={{
-              fontFamily: 'var(--mono)', fontSize: 10, padding: '8px 18px', borderRadius: 4,
+              fontFamily: 'var(--mono)', fontSize: 11, minHeight: 34, padding: '0 18px', borderRadius: 999,
               border: '1px solid var(--gold)', background: 'var(--gold-glow)', color: 'var(--gold)',
               cursor: palabra.trim() ? 'pointer' : 'not-allowed', opacity: palabra.trim() ? 1 : 0.4,
             }}
@@ -86,32 +88,26 @@ export default function Patrones() {
           <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>SUGERIDAS:</span>
           {SUGERIDAS.map(s => (
             <button key={s} onClick={() => { setPalabra(s); analizarPalabra(s) }} style={{
-              fontFamily: 'var(--mono)', fontSize: 9, padding: '3px 10px', borderRadius: 12,
+              fontFamily: 'var(--mono)', fontSize: 9, padding: '4px 12px', borderRadius: 999,
               border: '1px solid var(--border2)', background: 'none', color: 'var(--text-muted)', cursor: 'pointer',
             }}>{s}</button>
           ))}
         </div>
       </div>
 
-      {/* Filtros de categoría */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-        <button onClick={() => setFiltroCat('todos')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${filtroCat === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
-          background: filtroCat === 'todos' ? 'var(--gold-glow)' : 'none',
-          color: filtroCat === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-        }}>Todos ({patrones.length})</button>
+      {/* Filtros de categoría en el desplegable */}
+      <FiltrosDesplegable activos={filtroCat === 'todos' ? '' : (CATEGORIAS[filtroCat]?.label || filtroCat)}>
+        <Chip activo={filtroCat === 'todos'} onClick={() => setFiltroCat('todos')}>
+          Todos ({patrones.length})
+        </Chip>
         {Object.entries(CATEGORIAS).map(([key, info]) => (
           contar(key) > 0 && (
-            <button key={key} onClick={() => setFiltroCat(key)} style={{
-              fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
-              border: `1px solid ${filtroCat === key ? info.color : 'var(--border2)'}`,
-              background: filtroCat === key ? `${info.color}18` : 'none',
-              color: filtroCat === key ? info.color : 'var(--text-muted)', cursor: 'pointer',
-            }}>{info.icon} {info.label} ({contar(key)})</button>
+            <Chip key={key} activo={filtroCat === key} color={info.color} onClick={() => setFiltroCat(key)}>
+              {info.icon} {info.label} ({contar(key)})
+            </Chip>
           )
         ))}
-      </div>
+      </FiltrosDesplegable>
 
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 

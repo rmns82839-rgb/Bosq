@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo } from 'react'
 import { getEspirituSanto } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
+import Chip from '../components/ui/Chip'
+import FiltrosDesplegable from '../components/ui/FiltrosDesplegable'
 
 const SECCIONES = [
   { key: 'nombre',    label: 'Nombres',    icon: '🕊️', color: '#C9A84C', desc: 'Cómo lo nombra la Escritura' },
@@ -38,10 +40,10 @@ export default function Neumatologia() {
   const esPorLibro = tab === 'por_libro'
 
   return (
-    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 32px) 100px', maxWidth: 900, minWidth: 0 }}>
 
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 'clamp(26px, 6vw, 36px)', color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           El Espíritu Santo
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -50,38 +52,27 @@ export default function Neumatologia() {
         </p>
       </div>
 
-      {/* Pestañas de sección */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 14, flexWrap: 'wrap' }}>
+      {/* Secciones dentro del desplegable */}
+      <FiltrosDesplegable label="Secciones" activos={seccion?.label}>
         {SECCIONES.map(s => (
-          <button key={s.key} onClick={() => { setTab(s.key); setBusqueda('') }} style={{
-            fontFamily: 'var(--mono)', fontSize: 10,
-            padding: '8px 12px', borderRadius: 6,
-            border: `1px solid ${tab === s.key ? s.color : 'var(--border2)'}`,
-            background: tab === s.key ? `${s.color}20` : 'none',
-            color: tab === s.key ? s.color : 'var(--text-muted)',
-            cursor: 'pointer', fontWeight: tab === s.key ? 700 : 400,
-          }}>
+          <Chip key={s.key} activo={tab === s.key} color={s.color} onClick={() => { setTab(s.key); setBusqueda('') }}>
             {s.icon} {s.label} ({contar(s.key)})
-          </button>
+          </Chip>
         ))}
+      </FiltrosDesplegable>
+
+      {/* Descripción de la sección */}
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: seccion?.color, letterSpacing: '0.04em', marginBottom: 10 }}>
+        {seccion?.desc}
       </div>
 
-      {/* Descripción de la sección + buscador */}
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', marginBottom: 18 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: seccion?.color, letterSpacing: '0.04em' }}>
-          {seccion?.desc}
-        </span>
-        <input
-          style={{
-            marginLeft: 'auto', background: 'var(--surface2)', border: '1px solid var(--border2)',
-            color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 12,
-            padding: '6px 12px', borderRadius: 'var(--radius)', outline: 'none', minWidth: 160,
-          }}
-          placeholder="Buscar en esta sección..."
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-        />
-      </div>
+      {/* Buscador en su fila */}
+      <input
+        style={{ width: '100%', maxWidth: 320, boxSizing: 'border-box', background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 12, padding: '9px 12px', borderRadius: 'var(--radius)', outline: 'none', marginBottom: 18 }}
+        placeholder="Buscar en esta sección..."
+        value={busqueda}
+        onChange={e => setBusqueda(e.target.value)}
+      />
 
       {/* Nota honesta en el recorrido libro por libro */}
       {esPorLibro && !loading && (

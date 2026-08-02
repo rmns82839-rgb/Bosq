@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { getJesusEnLibros } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
+import Chip from '../components/ui/Chip'
+import FiltrosDesplegable from '../components/ui/FiltrosDesplegable'
 
 const COLOR_TESTAMENTO = { antiguo: '#C9A84C', nuevo: '#E07070' }
 
@@ -23,11 +25,13 @@ export default function JesusEnLibros() {
     return matchTest && matchBusq
   })
 
+  const etiquetaFiltro = filtro === 'antiguo' ? 'Antiguo' : filtro === 'nuevo' ? 'Nuevo' : ''
+
   return (
-    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 32px) 100px', maxWidth: 900, minWidth: 0 }}>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 'clamp(26px, 6vw, 36px)', color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           Jesús en Cada Libro
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -36,32 +40,24 @@ export default function JesusEnLibros() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-        <input
-          style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '8px 14px', borderRadius: 'var(--radius)', outline: 'none', minWidth: 180 }}
-          placeholder="Buscar libro o título..."
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-        />
-        <button onClick={() => setFiltro('todos')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${filtro === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
-          background: filtro === 'todos' ? 'var(--gold-glow)' : 'none',
-          color: filtro === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-        }}>Todos ({libros.length})</button>
-        <button onClick={() => setFiltro('antiguo')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${filtro === 'antiguo' ? COLOR_TESTAMENTO.antiguo : 'var(--border2)'}`,
-          background: filtro === 'antiguo' ? `${COLOR_TESTAMENTO.antiguo}18` : 'none',
-          color: filtro === 'antiguo' ? COLOR_TESTAMENTO.antiguo : 'var(--text-muted)', cursor: 'pointer',
-        }}>Antiguo Testamento ({libros.filter(l => l.testamento === 'antiguo').length})</button>
-        <button onClick={() => setFiltro('nuevo')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${filtro === 'nuevo' ? COLOR_TESTAMENTO.nuevo : 'var(--border2)'}`,
-          background: filtro === 'nuevo' ? `${COLOR_TESTAMENTO.nuevo}18` : 'none',
-          color: filtro === 'nuevo' ? COLOR_TESTAMENTO.nuevo : 'var(--text-muted)', cursor: 'pointer',
-        }}>Nuevo Testamento ({libros.filter(l => l.testamento === 'nuevo').length})</button>
-      </div>
+      <input
+        style={{ width: '100%', maxWidth: 320, boxSizing: 'border-box', background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '10px 14px', borderRadius: 'var(--radius)', outline: 'none', marginBottom: 12 }}
+        placeholder="Buscar libro o título..."
+        value={busqueda}
+        onChange={e => setBusqueda(e.target.value)}
+      />
+
+      <FiltrosDesplegable activos={etiquetaFiltro}>
+        <Chip activo={filtro === 'todos'} onClick={() => setFiltro('todos')}>
+          Todos ({libros.length})
+        </Chip>
+        <Chip activo={filtro === 'antiguo'} color={COLOR_TESTAMENTO.antiguo} onClick={() => setFiltro('antiguo')}>
+          Antiguo Testamento ({libros.filter(l => l.testamento === 'antiguo').length})
+        </Chip>
+        <Chip activo={filtro === 'nuevo'} color={COLOR_TESTAMENTO.nuevo} onClick={() => setFiltro('nuevo')}>
+          Nuevo Testamento ({libros.filter(l => l.testamento === 'nuevo').length})
+        </Chip>
+      </FiltrosDesplegable>
 
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 

@@ -85,12 +85,62 @@ function recolectarPuntos(lista, nivel, diapositivas) {
   });
 }
 
+/* ── Capa de modo predicación (pantalla completa + wake lock) ── */
+function CapaPredicacion({ slides, renderSlide, titulo, onCerrar }) {
+  useEffect(() => {
+    let wakeLock = null;
+    let cancelado = false;
+
+    const pedir = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      } catch { /* no soportado o bloqueado */ }
+    };
+
+    const onVisibilidad = () => {
+      if (!cancelado && document.visibilityState === 'visible') pedir();
+    };
+
+    pedir();
+    document.addEventListener('visibilitychange', onVisibilidad);
+    document.body.style.overflow = 'hidden';
+    const onEsc = (e) => e.key === 'Escape' && onCerrar();
+    document.addEventListener('keydown', onEsc);
+
+    return () => {
+      cancelado = true;
+      document.removeEventListener('visibilitychange', onVisibilidad);
+      document.removeEventListener('keydown', onEsc);
+      document.body.style.overflow = '';
+      try { wakeLock?.release(); } catch {}
+      try { if (document.fullscreenElement) document.exitFullscreen?.(); } catch {}
+    };
+  }, [onCerrar]);
+
+  return (
+    <div className="modo-predicacion" style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', flexDirection: 'column' }}>
+      <div className="modo-predicacion-barra">
+        <span className="modo-predicacion-titulo">{titulo || 'Bosquejo'}</span>
+        <button type="button" className="modo-predicacion-salir" onClick={onCerrar} aria-label="Salir del modo predicación">
+          ✕ Salir
+        </button>
+      </div>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Diapositivas slides={slides} renderSlide={renderSlide} />
+      </div>
+    </div>
+  );
+}
+
 const VerBosquejo = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentBosquejo, loadBosquejo, isLoading, error } = useBosquejoStore();
   const [fallo, setFallo] = useState(null);
   const [nota, setNota] = useState(null);
+  const [predicando, setPredicando] = useState(false);
 
   useEffect(() => {
     if (!id || id === 'undefined' || id === 'null') {
@@ -261,13 +311,25 @@ const VerBosquejo = () => {
             <ArrowLeftIcon className="w-5 h-5 mr-1" />
             Volver
           </Link>
-          <Link
-            to={`/bosquejos/${id}/editar`}
-            className="inline-flex items-center px-4 py-2 vb-btn-editar rounded-lg transition-colors"
-          >
-            <PencilIcon className="w-5 h-5 mr-2" />
-            Editar
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setPredicando(true);
+                try { document.documentElement.requestFullscreen?.(); } catch {}
+              }}
+              className="inline-flex items-center px-4 py-2 vb-btn-editar rounded-lg transition-colors"
+            >
+              🎤 <span className="ml-1">Predicar</span>
+            </button>
+            <Link
+              to={`/bosquejos/${id}/editar`}
+              className="inline-flex items-center px-4 py-2 vb-btn-editar rounded-lg transition-colors"
+            >
+              <PencilIcon className="w-5 h-5 mr-2" />
+              Editar
+            </Link>
+          </div>
         </div>
 
         <h1 className="vb-titulo font-serif font-bold text-2xl">
@@ -293,6 +355,15 @@ const VerBosquejo = () => {
         <div className="flex-1 flex items-center justify-center px-6">
           <p className="vb-texto-cuerpo text-center">Este bosquejo todavía no tiene contenido.</p>
         </div>
+      )}
+
+      {predicando && (
+        <CapaPredicacion
+          slides={diapositivas}
+          renderSlide={renderSlide}
+          titulo={currentBosquejo.titulo}
+          onCerrar={() => setPredicando(false)}
+        />
       )}
 
       <AnimatePresence>

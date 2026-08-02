@@ -302,3 +302,50 @@
 @media (min-width: 401px) and (max-width: 640px) {
   .vb-cinta-envoltura { padding: 18px 10px 9px; }
 }
+
+/* ── Modo predicación: pantalla completa, letra grande, sin distracciones ── */
+.modo-predicacion { background: var(--pergamino, #F7F1E3); }
+.dark .modo-predicacion { background: #0f0f1a; }
+
+.modo-predicacion-barra {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--pergamino, #F7F1E3);
+  border-bottom: 1px solid var(--cuero-borde, rgba(0,0,0,0.12));
+}
+.modo-predicacion-titulo {
+  font-family: 'Lora', serif;
+  font-size: 1rem;
+  color: var(--tinta, #1C1A17);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.modo-predicacion-salir {
+  flex-shrink: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--cuero-borde, rgba(0,0,0,0.15));
+  background: transparent;
+  color: var(--cuero, #6B4A3A);
+  cursor: pointer;
+}
+
+/* Sin miniaturas y con letra más grande para leer de lejos */
+.modo-predicacion .dp-rail,
+.modo-predicacion .dp-rail-toggle { display: none !important; }
+
+.modo-predicacion .dp-titulo { font-size: 2.1rem; line-height: 1.25; }
+.modo-predicacion .dp-texto  { font-size: 1.55rem; line-height: 1.7; }
+.modo-predicacion .dp-diapositiva-scroll { max-width: 860px; }
+
+@media (max-width: 640px) {
+  .modo-predicacion .dp-titulo { font-size: 1.75rem; }
+  .modo-predicacion .dp-texto  { font-size: 1.3rem; }
+}

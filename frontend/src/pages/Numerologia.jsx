@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { getNumeros } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
+import Chip from '../components/ui/Chip'
+import FiltrosDesplegable from '../components/ui/FiltrosDesplegable'
 
 const CATEGORIA_COLOR = {
   divino: '#C9A84C', humano: '#FB923C', gobierno: '#818CF8',
@@ -22,10 +24,10 @@ export default function Numerologia() {
   const filtrados = filtroCat === 'todos' ? numeros : numeros.filter(n => n.categoria === filtroCat)
 
   return (
-    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 32px) 100px', maxWidth: 900, minWidth: 0 }}>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 'clamp(26px, 6vw, 36px)', color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           Numerología Bíblica
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -33,26 +35,20 @@ export default function Numerologia() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-        <button onClick={() => setFiltroCat('todos')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${filtroCat === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
-          background: filtroCat === 'todos' ? 'var(--gold-glow)' : 'none',
-          color: filtroCat === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-        }}>Todos ({numeros.length})</button>
+      <FiltrosDesplegable activos={filtroCat === 'todos' ? '' : filtroCat}>
+        <Chip activo={filtroCat === 'todos'} onClick={() => setFiltroCat('todos')}>
+          Todos ({numeros.length})
+        </Chip>
         {categorias.map(c => {
           const color = CATEGORIA_COLOR[c] || 'var(--text-muted)'
           const count = numeros.filter(n => n.categoria === c).length
           return (
-            <button key={c} onClick={() => setFiltroCat(c)} style={{
-              fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
-              border: `1px solid ${filtroCat === c ? color : 'var(--border2)'}`,
-              background: filtroCat === c ? `${color}18` : 'none',
-              color: filtroCat === c ? color : 'var(--text-muted)', cursor: 'pointer',
-            }}>{c} ({count})</button>
+            <Chip key={c} activo={filtroCat === c} color={color} onClick={() => setFiltroCat(c)}>
+              {c} ({count})
+            </Chip>
           )
         })}
-      </div>
+      </FiltrosDesplegable>
 
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 

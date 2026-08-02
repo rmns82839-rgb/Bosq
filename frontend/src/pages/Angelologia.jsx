@@ -3,6 +3,7 @@ import { getAngeles } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 import Chip from '../components/ui/Chip'
+import FiltrosDesplegable from '../components/ui/FiltrosDesplegable'
 
 const TIPOS = {
   'arcángel':           { color: '#C9A84C', icon: '⚔️' },
@@ -58,8 +59,8 @@ export default function Angelologia() {
         onChange={e => setBusqueda(e.target.value)}
       />
 
-      {/* Chips: fila que envuelve pareja */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20 }}>
+      {/* Chips dentro del desplegable "Filtros" */}
+      <FiltrosDesplegable activos={filtroTipo === 'todos' ? '' : filtroTipo}>
         <Chip activo={filtroTipo === 'todos'} onClick={() => setFiltroTipo('todos')}>
           Todos ({angeles.length})
         </Chip>
@@ -72,7 +73,7 @@ export default function Angelologia() {
             </Chip>
           )
         })}
-      </div>
+      </FiltrosDesplegable>
 
       <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-muted)', marginBottom: 16 }}>
         {loading ? 'Cargando...' : `${filtrados.length} seres celestiales`}

@@ -3,6 +3,8 @@ import { getReyes } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
 import LineaTiempoReyes from '../components/reyes/LineaTiempoReyes'
+import Chip from '../components/ui/Chip'
+import FiltrosDesplegable from '../components/ui/FiltrosDesplegable'
 
 const C = { 'Israel unido': '#C9A84C', 'Judá': '#60A5FA', 'Israel': '#34D399' }
 const CE = { bueno: '#34D399', malo: '#F87171', mixto: '#FBBF24' }
@@ -22,10 +24,10 @@ export default function Reyes() {
   const filtrados = filtroReino === 'todos' ? reyes : reyes.filter(r => r.reino === filtroReino)
 
   return (
-    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 32px) 100px', maxWidth: 900, minWidth: 0 }}>
 
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 'clamp(26px, 6vw, 36px)', color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           Reyes de Israel y Judá
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -33,38 +35,24 @@ export default function Reyes() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-        <button onClick={() => setVista('lista')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${vista === 'lista' ? 'var(--gold)' : 'var(--border2)'}`,
-          background: vista === 'lista' ? 'var(--gold-glow)' : 'none',
-          color: vista === 'lista' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-        }}>📋 Lista</button>
-        <button onClick={() => setVista('tiempo')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${vista === 'tiempo' ? 'var(--gold)' : 'var(--border2)'}`,
-          background: vista === 'tiempo' ? 'var(--gold-glow)' : 'none',
-          color: vista === 'tiempo' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-        }}>📊 Línea de tiempo</button>
+      {/* Toggle de vista (navegación principal, siempre visible) */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
+        <Chip activo={vista === 'lista'} onClick={() => setVista('lista')}>📋 Lista</Chip>
+        <Chip activo={vista === 'tiempo'} onClick={() => setVista('tiempo')}>📊 Línea de tiempo</Chip>
       </div>
 
+      {/* Filtro de reino en el desplegable (solo en la vista lista) */}
       {vista === 'lista' && (
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-        <button onClick={() => setFiltroReino('todos')} style={{
-          fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-          border: `1px solid ${filtroReino === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
-          background: filtroReino === 'todos' ? 'var(--gold-glow)' : 'none',
-          color: filtroReino === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-        }}>Todos ({reyes.length})</button>
-        {reinos.map(r => (
-          <button key={r} onClick={() => setFiltroReino(r)} style={{
-            fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
-            border: `1px solid ${filtroReino === r ? C[r] || 'var(--gold)' : 'var(--border2)'}`,
-            background: filtroReino === r ? `${C[r] || 'var(--gold)'}18` : 'none',
-            color: filtroReino === r ? C[r] || 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-          }}>{r} ({reyes.filter(x => x.reino === r).length})</button>
-        ))}
-      </div>
+        <FiltrosDesplegable activos={filtroReino === 'todos' ? '' : filtroReino}>
+          <Chip activo={filtroReino === 'todos'} onClick={() => setFiltroReino('todos')}>
+            Todos ({reyes.length})
+          </Chip>
+          {reinos.map(r => (
+            <Chip key={r} activo={filtroReino === r} color={C[r] || 'var(--gold)'} onClick={() => setFiltroReino(r)}>
+              {r} ({reyes.filter(x => x.reino === r).length})
+            </Chip>
+          ))}
+        </FiltrosDesplegable>
       )}
 
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}

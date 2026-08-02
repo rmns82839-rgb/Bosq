@@ -109,7 +109,7 @@ const Diapositivas = React.forwardRef(function Diapositivas(
         <aside
           className="dp-rail"
           style={{
-            width: 190, flexShrink: 0, overflowY: 'auto', padding: '10px 8px',
+            width: 'clamp(92px, 24vw, 190px)', flexShrink: 0, overflowY: 'auto', padding: '8px 6px',
             borderRight: '1px solid rgba(0,0,0,0.1)', background: 'rgba(0,0,0,0.025)',
           }}
         >

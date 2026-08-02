@@ -2,6 +2,8 @@ import { useEffect, useState, useMemo } from 'react'
 import { getProfecias, getJuicios, getMilagrosJesus } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
+import Chip from '../components/ui/Chip'
+import FiltrosDesplegable from '../components/ui/FiltrosDesplegable'
 
 const ETAPAS_PROFECIA = {
   nacimiento:   { label: 'Linaje y nacimiento', color: '#C9A84C', icon: '⭐' },
@@ -61,10 +63,10 @@ export default function Especiales() {
   )
 
   return (
-    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 880, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 32px) 100px', maxWidth: 880, minWidth: 0 }}>
 
       <div style={{ marginBottom: 22 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 'clamp(26px, 6vw, 36px)', color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           Estudios Especiales
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -72,41 +74,29 @@ export default function Especiales() {
         </p>
       </div>
 
-      {/* Pestañas */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 18, background: 'var(--surface2)', padding: 4, borderRadius: 8, flexWrap: 'wrap' }}>
+      {/* Pestañas (navegación principal, visibles) */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
         {TABS.map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
-            flex: 1, minWidth: 130, fontFamily: 'var(--mono)', fontSize: 10,
-            padding: '10px 14px', borderRadius: 6, border: 'none',
-            background: tab === t.key ? 'var(--gold)' : 'none',
-            color: tab === t.key ? 'var(--bg)' : 'var(--text-muted)',
-            cursor: 'pointer', fontWeight: tab === t.key ? 700 : 400,
-          }}>
+          <Chip key={t.key} activo={tab === t.key} onClick={() => setTab(t.key)}>
             {t.icon} {t.label}
-          </button>
+          </Chip>
         ))}
       </div>
 
-      {/* Filtros por grupo */}
+      {/* Filtros por grupo en el desplegable */}
       {grupos && !loading && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 18 }}>
-          <button onClick={() => setFiltro('todos')} style={{
-            fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-            border: `1px solid ${filtro === 'todos' ? 'var(--gold)' : 'var(--border2)'}`,
-            background: filtro === 'todos' ? 'var(--gold-glow)' : 'none',
-            color: filtro === 'todos' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-          }}>Todos ({datos.length})</button>
+        <FiltrosDesplegable activos={filtro === 'todos' ? '' : (grupos[filtro]?.label || filtro)}>
+          <Chip activo={filtro === 'todos'} onClick={() => setFiltro('todos')}>
+            Todos ({datos.length})
+          </Chip>
           {Object.entries(grupos).map(([key, info]) => (
             contar(key) > 0 && (
-              <button key={key} onClick={() => setFiltro(key)} style={{
-                fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
-                border: `1px solid ${filtro === key ? info.color : 'var(--border2)'}`,
-                background: filtro === key ? `${info.color}18` : 'none',
-                color: filtro === key ? info.color : 'var(--text-muted)', cursor: 'pointer',
-              }}>{info.icon} {info.label} ({contar(key)})</button>
+              <Chip key={key} activo={filtro === key} color={info.color} onClick={() => setFiltro(key)}>
+                {info.icon} {info.label} ({contar(key)})
+              </Chip>
             )
           ))}
-        </div>
+        </FiltrosDesplegable>
       )}
 
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}

@@ -596,3 +596,18 @@ select.be-proposito {
   flex-shrink: 0;
 }
 .be-proposito-volver:hover { color: var(--primary-color); }
+
+/* ── Recuadro para destacar una diapositiva clave ── */
+.be-diapo-recuadro {
+  border: 2px solid var(--laton, #A8823C);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(168, 130, 60, 0.05);
+  box-shadow: 0 0 0 1px rgba(168, 130, 60, 0.15) inset;
+}
+
+.be-icono-recuadro-on {
+  color: var(--laton, #A8823C) !important;
+  background: rgba(168, 130, 60, 0.15) !important;
+  border-radius: 6px;
+}

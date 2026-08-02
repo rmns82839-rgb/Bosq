@@ -145,6 +145,7 @@ function normalizar(puntos) {
     descripcion: p.descripcion ?? p.desarrollo ?? '',
     versos: p.versos || '',
     notas: p.notas || '',
+    recuadro: !!p.recuadro,
     subpuntos: normalizarHijos(p.subpuntos),
   }));
 }
@@ -278,8 +279,18 @@ export default function BosquejoEditor({
     lista.push({ id: '__agregar__', rol: 'punto0', etiqueta: '+ Punto', tipo: 'agregar' });
     lista.push({ id: '__aplicacion__', rol: 'aplicacion', etiqueta: 'Aplicación', tipo: 'aplicacion' });
     lista.push({ id: '__conclusion__', rol: 'conclusion', etiqueta: 'Conclusión', tipo: 'conclusion' });
-    return lista;
-  }, [puntos]);
+    // Vista previa para las miniaturas (quita las notas ⟦…⟧ y recorta)
+    const limpiar = (t) => (t || '').replace(/⟦[^⟧]*⟧/g, '').replace(/\s+/g, ' ').trim().slice(0, 90);
+    return lista.map((s) => {
+      let r = '';
+      if (s.tipo === 'portada') r = datos.titulo;
+      else if (s.tipo === 'intro') r = datos.introduccion?.gancho;
+      else if (s.tipo === 'aplicacion') r = datos.aplicacion?.texto;
+      else if (s.tipo === 'conclusion') r = datos.conclusion?.resumen;
+      else if (s.tipo === 'punto') r = s.punto?.titulo || s.punto?.descripcion;
+      return { ...s, resumen: limpiar(r) };
+    });
+  }, [puntos, datos]);
 
   // Después de agregar/insertar un punto, salta a su diapositiva.
   useEffect(() => {
@@ -357,13 +368,19 @@ export default function BosquejoEditor({
       const { punto: p, ruta, nivel, indice, total } = slide;
       const puedeAnidar = nivel < MAX_NIVEL;
       return (
-        <>
+        <div className={p.recuadro ? 'be-diapo-recuadro' : undefined}>
           <div className="dp-punto-encabezado">
             <span className="dp-marcador-grande">{marcador(nivel, indice)}.</span>
             <div className="be-orden-botones">
               <button type="button" className="be-icono" onClick={() => acciones.moverArriba(ruta)} disabled={indice === 0} title="Mover arriba">▲</button>
               <button type="button" className="be-icono" onClick={() => acciones.moverAbajo(ruta)} disabled={indice === total - 1} title="Mover abajo">▼</button>
             </div>
+            <button
+              type="button"
+              className={p.recuadro ? 'be-icono be-icono-recuadro-on' : 'be-icono'}
+              onClick={() => acciones.editar(ruta, 'recuadro', !p.recuadro)}
+              title={p.recuadro ? 'Quitar recuadro' : 'Destacar con recuadro'}
+            >▢</button>
             <button type="button" className="be-icono be-icono-borrar" onClick={() => acciones.eliminar(ruta)} title="Eliminar este punto">✕</button>
           </div>
 
@@ -409,7 +426,7 @@ export default function BosquejoEditor({
               </button>
             )}
           </div>
-        </>
+        </div>
       );
     }
 

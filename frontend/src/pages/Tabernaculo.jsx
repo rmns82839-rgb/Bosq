@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { getElementosTabernaculo, getFigurasIglesia } from '../services/bibliaService'
 import { VersiculoLink } from '../lib/bibliaLink'
 import BotonPreguntarIA from '../components/common/BotonPreguntarIA'
+import Chip from '../components/ui/Chip'
+import FiltrosDesplegable from '../components/ui/FiltrosDesplegable'
 
 const SECCIONES = {
   atrio:           { label: 'Atrio',           color: '#A8823C', icon: '🔥' },
@@ -45,20 +47,11 @@ export default function Tabernaculo() {
     f.descripcion?.toLowerCase().includes(busqueda.toLowerCase())
   )
 
-  const tabBtn = (id, texto) => (
-    <button onClick={() => { setVista(id); setBusqueda(''); setFiltroSeccion('todas') }} style={{
-      flex: 1, fontFamily: 'var(--crimson)', fontSize: 15, padding: '10px 0', borderRadius: 'var(--radius)',
-      border: `1px solid ${vista === id ? 'var(--gold)' : 'var(--border2)'}`,
-      background: vista === id ? 'var(--gold-glow)' : 'none',
-      color: vista === id ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-    }}>{texto}</button>
-  )
-
   return (
-    <main style={{ flex: 1, padding: '28px 32px 100px', maxWidth: 900, minWidth: 0 }}>
+    <main style={{ flex: 1, padding: 'clamp(16px, 4vw, 28px) clamp(14px, 4vw, 32px) 100px', maxWidth: 900, minWidth: 0 }}>
 
       <div style={{ marginBottom: 20 }}>
-        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 36, color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
+        <h1 style={{ fontFamily: 'var(--crimson)', fontSize: 'clamp(26px, 6vw, 36px)', color: 'var(--gold)', fontWeight: 300, marginBottom: 6 }}>
           Tabernáculo y la Iglesia
         </h1>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
@@ -66,41 +59,41 @@ export default function Tabernaculo() {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {tabBtn('tabernaculo', `🏕️ Tabernáculo (${elementos.length})`)}
-        {tabBtn('figuras', `🕊️ Figuras de la Iglesia (${figuras.length})`)}
+      {/* Toggle de vista (navegación principal, visible) */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
+        <Chip activo={vista === 'tabernaculo'} onClick={() => { setVista('tabernaculo'); setBusqueda('') }}>
+          🏕️ Tabernáculo ({elementos.length})
+        </Chip>
+        <Chip activo={vista === 'figuras'} onClick={() => { setVista('figuras'); setBusqueda(''); setFiltroSeccion('todas') }}>
+          🕊️ Figuras de la Iglesia ({figuras.length})
+        </Chip>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 20 }}>
-        <input
-          style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '8px 14px', borderRadius: 'var(--radius)', outline: 'none', minWidth: 180 }}
-          placeholder={vista === 'tabernaculo' ? 'Buscar elemento...' : 'Buscar figura...'}
-          value={busqueda}
-          onChange={e => setBusqueda(e.target.value)}
-        />
-        {vista === 'tabernaculo' && (
-          <>
-            <button onClick={() => setFiltroSeccion('todas')} style={{
-              fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 14px', borderRadius: 4,
-              border: `1px solid ${filtroSeccion === 'todas' ? 'var(--gold)' : 'var(--border2)'}`,
-              background: filtroSeccion === 'todas' ? 'var(--gold-glow)' : 'none',
-              color: filtroSeccion === 'todas' ? 'var(--gold)' : 'var(--text-muted)', cursor: 'pointer',
-            }}>Todas ({elementos.length})</button>
-            {secciones.map(s => {
-              const info = SECCIONES[s] || { label: s, color: 'var(--text-muted)', icon: '•' }
-              const count = elementos.filter(e => e.seccion === s).length
-              return (
-                <button key={s} onClick={() => setFiltroSeccion(s)} style={{
-                  fontFamily: 'var(--mono)', fontSize: 10, padding: '6px 12px', borderRadius: 4,
-                  border: `1px solid ${filtroSeccion === s ? info.color : 'var(--border2)'}`,
-                  background: filtroSeccion === s ? `${info.color}18` : 'none',
-                  color: filtroSeccion === s ? info.color : 'var(--text-muted)', cursor: 'pointer',
-                }}>{info.icon} {info.label} ({count})</button>
-              )
-            })}
-          </>
-        )}
-      </div>
+      {/* Buscador en su fila */}
+      <input
+        style={{ width: '100%', maxWidth: 320, boxSizing: 'border-box', background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '10px 14px', borderRadius: 'var(--radius)', outline: 'none', marginBottom: 12 }}
+        placeholder={vista === 'tabernaculo' ? 'Buscar elemento...' : 'Buscar figura...'}
+        value={busqueda}
+        onChange={e => setBusqueda(e.target.value)}
+      />
+
+      {/* Filtro de sección en el desplegable (solo en la vista tabernáculo) */}
+      {vista === 'tabernaculo' && (
+        <FiltrosDesplegable activos={filtroSeccion === 'todas' ? '' : (SECCIONES[filtroSeccion]?.label || filtroSeccion)}>
+          <Chip activo={filtroSeccion === 'todas'} onClick={() => setFiltroSeccion('todas')}>
+            Todas ({elementos.length})
+          </Chip>
+          {secciones.map(s => {
+            const info = SECCIONES[s] || { label: s, color: 'var(--text-muted)', icon: '•' }
+            const count = elementos.filter(e => e.seccion === s).length
+            return (
+              <Chip key={s} activo={filtroSeccion === s} color={info.color} onClick={() => setFiltroSeccion(s)}>
+                {info.icon} {info.label} ({count})
+              </Chip>
+            )
+          })}
+        </FiltrosDesplegable>
+      )}
 
       <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text-muted)', marginBottom: 16 }}>
         {loading ? 'Cargando...' : vista === 'tabernaculo'
@@ -111,7 +104,7 @@ export default function Tabernaculo() {
       {loading && <div className="loading"><div className="loading-dot"/><div className="loading-dot"/><div className="loading-dot"/></div>}
 
       {!loading && vista === 'tabernaculo' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: 12 }}>
           {elementosFiltrados.map((e) => {
             const info = SECCIONES[e.seccion] || { label: e.seccion, color: 'var(--gold)', icon: '•' }
             return (
@@ -125,7 +118,7 @@ export default function Tabernaculo() {
               }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
                   <span style={{ fontSize: 20 }}>{info.icon}</span>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--crimson)', fontSize: 17, color: info.color, lineHeight: 1.2, marginBottom: 4 }}>
                       {e.nombre}
                     </div>
@@ -161,7 +154,7 @@ export default function Tabernaculo() {
       )}
 
       {!loading && vista === 'figuras' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))', gap: 12 }}>
           {figurasFiltradas.map((f) => (
             <div key={f.id} style={{
               background: 'var(--surface)',

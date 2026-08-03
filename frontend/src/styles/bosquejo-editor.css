@@ -611,3 +611,163 @@ select.be-proposito {
   background: rgba(168, 130, 60, 0.15) !important;
   border-radius: 6px;
 }
+
+/* ── Desplegable premium (Propósito y similares) ── */
+.be-select { position: relative; width: 100%; }
+
+.be-select-boton {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  padding: 10px 14px;
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.35));
+  border-radius: 10px;
+  background: var(--pergamino, #F7F1E3);
+  color: var(--tinta, #1C1A17);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s, box-shadow .15s;
+}
+.be-select-boton:hover { border-color: var(--laton, #A8823C); }
+.be-select-boton:focus-visible { outline: none; border-color: var(--laton, #A8823C); box-shadow: 0 0 0 3px rgba(168,130,60,0.15); }
+
+.be-select-placeholder { color: var(--cuero, #6B4A3A); opacity: 0.7; }
+.be-select-valor { color: var(--tinta, #1C1A17); }
+
+.be-select-chevron { color: var(--laton, #A8823C); flex-shrink: 0; transition: transform .25s ease; }
+.be-select-chevron.abierto { transform: rotate(180deg); }
+
+.be-select-lista {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 30;
+  display: flex; flex-direction: column;
+  padding: 6px;
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.3));
+  border-radius: 12px;
+  background: var(--pergamino, #F7F1E3);
+  box-shadow: 0 12px 32px rgba(28,26,23,0.18);
+  max-height: 280px; overflow-y: auto;
+  animation: be-select-aparece .16s ease;
+}
+@keyframes be-select-aparece {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.be-select-opcion {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  text-align: left;
+  padding: 9px 12px;
+  border: none; border-radius: 8px;
+  background: transparent;
+  color: var(--tinta, #1C1A17);
+  cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.be-select-opcion:hover { background: var(--pergamino-sombra, rgba(107,74,58,0.1)); }
+.be-select-opcion.activa { background: rgba(168,130,60,0.16); color: var(--laton, #A8823C); font-weight: 600; }
+.be-select-otro {
+  color: var(--purpura, #5B3A6E); font-style: italic; margin-top: 4px;
+  border-top: 1px solid var(--cuero-borde, rgba(107,74,58,0.18));
+  border-radius: 0 0 8px 8px;
+}
+
+/* ── Buscador inteligente de palabras (IA) ── */
+.be-buscador-ia {
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.3));
+  border-left: 3px solid var(--laton, #A8823C);
+  border-radius: 12px;
+  background: rgba(168,130,60,0.05);
+  overflow: hidden;
+}
+.be-buscador-ia-toggle {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 11px 14px;
+  border: none; background: transparent;
+  color: var(--laton, #A8823C);
+  cursor: pointer; text-align: left;
+}
+.be-buscador-ia-cuerpo { padding: 0 14px 14px; }
+.be-buscador-ia-fila { display: flex; gap: 8px; flex-wrap: wrap; }
+.be-buscador-ia-input {
+  flex: 1; min-width: 180px;
+  font-family: var(--font-mono); font-size: 0.9rem;
+  padding: 9px 12px;
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.35));
+  border-radius: 9px;
+  background: var(--pergamino, #F7F1E3);
+  color: var(--tinta, #1C1A17);
+  outline: none;
+}
+.be-buscador-ia-input:focus { border-color: var(--laton, #A8823C); box-shadow: 0 0 0 3px rgba(168,130,60,0.15); }
+.be-buscador-ia-btn {
+  flex-shrink: 0;
+  font-family: var(--font-mono); font-size: 0.82rem;
+  padding: 0 16px; min-height: 38px;
+  border: 1px solid var(--laton, #A8823C); border-radius: 9px;
+  background: var(--laton, #A8823C); color: var(--pergamino, #F7F1E3);
+  cursor: pointer; transition: opacity .15s;
+}
+.be-buscador-ia-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.be-buscador-ia-nota {
+  font-family: var(--font-mono); font-size: 0.68rem;
+  color: var(--cuero, #6B4A3A); opacity: 0.75;
+  margin: 8px 0 0; letter-spacing: 0.02em;
+}
+
+/* ── Lupa flotante del buscador de palabras ── */
+.be-lupa-flotante {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  gap: 10px;
+  /* left / top / alineación los pone el componente */
+
+}
+.be-lupa-boton {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--laton, #A8823C);
+  background: var(--laton, #A8823C);
+  color: var(--pergamino, #F7F1E3);
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(28,26,23,0.28);
+  transition: transform .15s, box-shadow .15s;
+  align-self: flex-end;
+}
+.be-lupa-boton:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(28,26,23,0.34); }
+.be-lupa-boton:active { transform: translateY(0); }
+
+.be-lupa-panel {
+  width: min(320px, calc(100vw - 40px));
+  padding: 14px;
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.3));
+  border-left: 3px solid var(--laton, #A8823C);
+  border-radius: 12px;
+  background: var(--pergamino, #F7F1E3);
+  box-shadow: 0 14px 36px rgba(28,26,23,0.22);
+  animation: be-select-aparece .16s ease;
+}
+
+.be-lupa-boton.arrastrando {
+  cursor: grabbing;
+  transform: scale(1.08);
+  box-shadow: 0 8px 22px rgba(28,26,23,0.4);
+}
+
+/* Agarre para arrastrar la lupa incluso abierta */
+.be-lupa-agarre {
+  display: flex; justify-content: center; align-items: center;
+  height: 18px; margin: -4px 0 8px;
+  cursor: grab;
+}
+.be-lupa-agarre:active { cursor: grabbing; }
+.be-lupa-agarre-linea {
+  width: 40px; height: 4px; border-radius: 999px;
+  background: var(--cuero-borde, rgba(107,74,58,0.4));
+}

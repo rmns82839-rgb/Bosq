@@ -242,7 +242,7 @@ const VerBosquejo = () => {
       const p = slide.datos;
       const cuerpo = p.descripcion ?? p.desarrollo ?? '';
       return (
-        <>
+        <div className={p.recuadro ? 'be-diapo-recuadro' : undefined}>
           {p.titulo && <h2 className="dp-titulo mb-3">{p.titulo}</h2>}
           {cuerpo && <p className="dp-texto">{renderTextoConNotas(cuerpo, abrirNota, `pt-${p.id}`)}</p>}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5">
@@ -255,7 +255,7 @@ const VerBosquejo = () => {
               </button>
             )}
           </div>
-        </>
+        </div>
       );
     }
 

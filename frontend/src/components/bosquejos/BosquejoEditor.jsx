@@ -37,6 +37,15 @@ const PROPOSITOS = [
 function CampoProposito({ value, onChange }) {
   const esPersonalizado = !!value && !PROPOSITOS.includes(value);
   const [modoOtro, setModoOtro] = useState(esPersonalizado);
+  const [abierto, setAbierto] = useState(false);
+  const contRef = useRef(null);
+
+  useEffect(() => {
+    if (!abierto) return;
+    const onDoc = (e) => { if (contRef.current && !contRef.current.contains(e.target)) setAbierto(false); };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [abierto]);
 
   if (modoOtro) {
     return (
@@ -53,19 +62,194 @@ function CampoProposito({ value, onChange }) {
     );
   }
 
+  const seleccionar = (v) => {
+    if (v === '__otro__') { setModoOtro(true); onChange(''); }
+    else onChange(v);
+    setAbierto(false);
+  };
+
   return (
-    <select
-      className="be-input be-proposito"
-      value={value || ''}
-      onChange={(e) => {
-        if (e.target.value === '__otro__') { setModoOtro(true); onChange(''); }
-        else onChange(e.target.value);
+    <div className="be-select" ref={contRef}>
+      <button type="button" className="be-select-boton" onClick={() => setAbierto((v) => !v)}>
+        <span className={value ? 'be-select-valor' : 'be-select-placeholder'}>
+          {value || 'Propósito (opcional)'}
+        </span>
+        <svg className={`be-select-chevron${abierto ? ' abierto' : ''}`} width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M2.5 4L6 7.5L9.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+
+      {abierto && (
+        <div className="be-select-lista" role="listbox">
+          <button type="button" className={`be-select-opcion${!value ? ' activa' : ''}`} onClick={() => seleccionar('')}>
+            Propósito (opcional)
+          </button>
+          {PROPOSITOS.map((p) => (
+            <button key={p} type="button" className={`be-select-opcion${value === p ? ' activa' : ''}`} onClick={() => seleccionar(p)}>
+              {p}
+            </button>
+          ))}
+          <button type="button" className="be-select-opcion be-select-otro" onClick={() => seleccionar('__otro__')}>
+            Otro…
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* Buscador flotante ARRASTRABLE con imán a la pared más cercana.
+   Se arrastra con el dedo/mouse; al soltar, se pega al borde
+   izquierdo o derecho (el que quede más cerca). Abre el estudio
+   en la IA (Perplexity), sin backend ni API key. */
+function BuscadorPalabraFlotante() {
+  const [abierto, setAbierto] = useState(false);
+  const [palabra, setPalabra] = useState('');
+  const [pos, setPos] = useState(() => ({
+    x: (typeof window !== 'undefined' ? window.innerWidth : 400) - 62,
+    y: (typeof window !== 'undefined' ? window.innerHeight : 700) - 150,
+  }));
+  const [arrastrando, setArrastrando] = useState(false);
+
+  const contRef = useRef(null);
+  const inputRef = useRef(null);
+  const dragRef = useRef({ activo: false, movido: false, offX: 0, offY: 0 });
+
+  const BTN = 46;
+  const MARGEN = 12;
+
+  // Imanta al borde más cercano usando el TAMAÑO REAL del conjunto
+  // (botón o panel abierto), para que nada quede fuera de la pantalla.
+  const imantar = (x, y) => {
+    const w = window.innerWidth, h = window.innerHeight;
+    const rect = contRef.current?.getBoundingClientRect();
+    const cw = rect?.width || BTN;
+    const ch = rect?.height || BTN;
+    const centroX = x + cw / 2;
+    const nx = centroX < w / 2 ? MARGEN : w - cw - MARGEN;
+    const ny = Math.max(MARGEN, Math.min(y, h - ch - MARGEN));
+    return { x: nx, y: ny };
+  };
+
+  // Mantener dentro de la pantalla en vivo mientras se arrastra
+  const acotar = (x, y) => {
+    const w = window.innerWidth, h = window.innerHeight;
+    const rect = contRef.current?.getBoundingClientRect();
+    const cw = rect?.width || BTN;
+    const ch = rect?.height || BTN;
+    return {
+      x: Math.max(MARGEN, Math.min(x, w - cw - MARGEN)),
+      y: Math.max(MARGEN, Math.min(y, h - ch - MARGEN)),
+    };
+  };
+
+  useEffect(() => {
+    const onResize = () => setPos((p) => imantar(p.x, p.y));
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // Al abrir/cerrar cambia el tamaño → reacomodar para no salirse
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setPos((p) => imantar(p.x, p.y)));
+    return () => cancelAnimationFrame(id);
+  }, [abierto]);
+
+  const onPointerDown = (e) => {
+    dragRef.current = { activo: true, movido: false, offX: e.clientX - pos.x, offY: e.clientY - pos.y };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e) => {
+    if (!dragRef.current.activo) return;
+    const nx = e.clientX - dragRef.current.offX;
+    const ny = e.clientY - dragRef.current.offY;
+    if (Math.abs(nx - pos.x) > 3 || Math.abs(ny - pos.y) > 3) dragRef.current.movido = true;
+    if (dragRef.current.movido) { setArrastrando(true); setPos(acotar(nx, ny)); }
+  };
+  const onPointerUp = () => {
+    if (!dragRef.current.activo) return;
+    const fueMovido = dragRef.current.movido;
+    dragRef.current.activo = false;
+    setArrastrando(false);
+    if (fueMovido) setPos((p) => imantar(p.x, p.y));
+    else setAbierto((v) => !v);
+  };
+
+  useEffect(() => {
+    if (!abierto) return;
+    inputRef.current?.focus();
+    const onEsc = (e) => { if (e.key === 'Escape') setAbierto(false); };
+    document.addEventListener('keydown', onEsc);
+    return () => document.removeEventListener('keydown', onEsc);
+  }, [abierto]);
+
+  const analizar = (termino) => {
+    const t = (termino || '').trim();
+    if (!t) return;
+    const pregunta =
+      `Estudio bíblico profundo de la palabra "${t}". Dame: ` +
+      `1) el término original en hebreo, griego y/o arameo (con transliteración) y su significado literal; ` +
+      `2) qué significaba en la época y cultura bíblica; ` +
+      `3) los matices que se pierden en la traducción al español; ` +
+      `4) pasajes clave donde aparece y cómo evoluciona su uso entre el Antiguo y el Nuevo Testamento; ` +
+      `5) su relevancia teológica para la predicación.`;
+    window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(pregunta)}`, '_blank', 'noopener');
+    setAbierto(false);
+    setPalabra('');
+  };
+
+  const enDerecha = pos.x > (typeof window !== 'undefined' ? window.innerWidth : 800) / 2;
+
+  return (
+    <div
+      className="be-lupa-flotante"
+      ref={contRef}
+      style={{
+        left: pos.x, top: pos.y,
+        alignItems: enDerecha ? 'flex-end' : 'flex-start',
+        flexDirection: 'column-reverse',
+        transition: arrastrando ? 'none' : 'left .22s cubic-bezier(.22,1,.36,1), top .22s cubic-bezier(.22,1,.36,1)',
       }}
     >
-      <option value="">Propósito (opcional)</option>
-      {PROPOSITOS.map((p) => <option key={p} value={p}>{p}</option>)}
-      <option value="__otro__">Otro…</option>
-    </select>
+      <button
+        type="button"
+        className={`be-lupa-boton${arrastrando ? ' arrastrando' : ''}`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        title="Arrastra para mover · toca para estudiar una palabra"
+        aria-label="Estudiar una palabra con IA"
+        style={{ touchAction: 'none' }}
+      >
+        {abierto ? '✕' : '🔎'}
+      </button>
+
+      {abierto && (
+        <div
+          className="be-lupa-panel"
+          style={{ marginBottom: 10 }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <div className="be-lupa-agarre" onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} style={{ touchAction: 'none' }}>
+            <span className="be-lupa-agarre-linea" />
+          </div>
+          <div className="be-buscador-ia-fila">
+            <input
+              ref={inputRef}
+              className="be-buscador-ia-input"
+              placeholder="palabra… (ej: gracia, shalom, ágape)"
+              value={palabra}
+              onChange={(e) => setPalabra(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') analizar(palabra); }}
+            />
+            <button type="button" className="be-buscador-ia-btn" onClick={() => analizar(palabra)} disabled={!palabra.trim()}>
+              Estudiar ↗
+            </button>
+          </div>
+          <p className="be-buscador-ia-nota">Origen · hebreo / griego / arameo · significado en época bíblica</p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -490,17 +674,16 @@ export default function BosquejoEditor({
 
   return (
     <div className="be-hoja be-premium" style={{ height: '100dvh', display: 'flex', flexDirection: 'column', maxWidth: 'none', padding: 0 }}>
-      <header className="be-encabezado" style={{ padding: '14px 16px', flexShrink: 0 }}>
-        <div className="be-encabezado-texto">
-          <h1 className="be-encabezado-titulo" style={{ fontSize: '1.3rem' }}>{titulo}</h1>
-          <p className="be-encabezado-nota">
-            {totalPuntos} {totalPuntos === 1 ? 'punto' : 'puntos'} · desliza para navegar
-            {borradorGuardado && <span style={{ opacity: 0.7 }}> · borrador guardado ✓</span>}
-          </p>
+      <header className="be-encabezado" style={{ padding: '6px 10px', flexShrink: 0, minHeight: 0 }}>
+        <div className="be-encabezado-texto" style={{ minWidth: 0, overflow: 'hidden' }}>
+          <h1 className="be-encabezado-titulo" style={{ fontSize: '1rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {titulo}
+            {borradorGuardado && <span style={{ opacity: 0.55, fontSize: '0.7rem', fontWeight: 400 }}> · guardado ✓</span>}
+          </h1>
         </div>
-        <div className="be-encabezado-acciones">
+        <div className="be-encabezado-acciones" style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
           {onCancelar && (
-            <button type="button" className="be-btn be-btn-plano" onClick={onCancelar}>Volver</button>
+            <button type="button" className="be-btn be-btn-plano" onClick={onCancelar} title="Volver" aria-label="Volver" style={{ padding: '6px 11px', minWidth: 0 }}>←</button>
           )}
           <button
             type="button"
@@ -508,8 +691,10 @@ export default function BosquejoEditor({
             onClick={onGuardar}
             disabled={guardando || sinTitulo}
             title={sinTitulo ? 'Ponle un título primero' : 'Guardar bosquejo'}
+            aria-label="Guardar"
+            style={{ padding: '6px 12px', minWidth: 0 }}
           >
-            {guardando ? 'Guardando…' : 'Guardar'}
+            {guardando ? '…' : '💾'}
           </button>
         </div>
       </header>
@@ -541,6 +726,8 @@ export default function BosquejoEditor({
       <div className="flex-1 min-h-0">
         <Diapositivas ref={diapoRef} slides={slides} renderSlide={renderSlide} />
       </div>
+
+      <BuscadorPalabraFlotante />
     </div>
   );
 }

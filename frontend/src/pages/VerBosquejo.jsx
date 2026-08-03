@@ -6,6 +6,7 @@ import { PencilIcon, ArrowLeftIcon, XMarkIcon } from '@heroicons/react/24/outlin
 import { useBosquejoStore } from '../stores/bosquejoStore';
 import Header from '../components/common/Header';
 import Diapositivas from '../components/common/Diapositivas';
+import BosquejoImprimible from '../components/bosquejos/BosquejoImprimible';
 import { VersiculoLink } from '../lib/bibliaLink';
 import { decodificarSeccion } from '../lib/bosquejoSecciones';
 import { renderTextoConNotas, tieneTextoVisible } from '../lib/textoConNotas';
@@ -322,6 +323,16 @@ const VerBosquejo = () => {
             >
               🎤 <span className="ml-1">Predicar</span>
             </button>
+
+                <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center px-4 py-2 vb-btn-editar rounded-lg transition-colors"
+            title="Imprimir o guardar como PDF"
+          >
+            🖨 <span className="ml-1">PDF</span>
+          </button>
+
             <Link
               to={`/bosquejos/${id}/editar`}
               className="inline-flex items-center px-4 py-2 vb-btn-editar rounded-lg transition-colors"
@@ -365,6 +376,8 @@ const VerBosquejo = () => {
           onCerrar={() => setPredicando(false)}
         />
       )}
+
+      <BosquejoImprimible bosquejo={currentBosquejo} />
 
       <AnimatePresence>
         {nota && (

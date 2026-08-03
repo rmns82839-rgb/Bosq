@@ -365,3 +365,51 @@
 
 /* En el modo predicación, un resaltado un poco más marcado para verlo de lejos */
 .modo-predicacion .texto-resaltado { background: rgba(201, 168, 76, 0.45); }
+
+/* ── Hoja de impresión / PDF (oculta en pantalla) ── */
+.bosquejo-print { display: none; }
+
+@media print {
+  /* Ocultar TODA la app; mostrar solo la hoja imprimible */
+  body * { visibility: hidden !important; }
+  .bosquejo-print, .bosquejo-print * { visibility: visible !important; }
+  .bosquejo-print {
+    display: block !important;
+    position: absolute; left: 0; top: 0; width: 100%;
+    padding: 0;
+    color: #1b1b1b; background: #fff;
+    font-family: 'Lora', Georgia, serif;
+  }
+
+  @page { margin: 18mm 16mm; }
+
+  .pr-cabecera { border-bottom: 2px solid #A8823C; padding-bottom: 10px; margin-bottom: 16px; }
+  .pr-titulo { font-size: 22pt; font-weight: 700; margin: 0 0 4px; color: #1b1b1b; }
+  .pr-meta { font-size: 9pt; color: #6b4a3a; margin: 0 0 2px; letter-spacing: 0.02em; }
+  .pr-cita { font-size: 10pt; color: #5b3a6e; margin: 4px 0 0; }
+
+  .pr-seccion { margin: 0 0 14px; break-inside: avoid; }
+  .pr-seccion-titulo {
+    font-size: 11pt; font-weight: 700; color: #A8823C;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin: 0 0 4px; border-bottom: 1px solid #e0d5c0; padding-bottom: 2px;
+  }
+
+  .pr-puntos { margin: 4px 0 14px; }
+  .pr-punto { margin: 0 0 10px; break-inside: avoid; }
+  .pr-nivel-1 { margin-left: 18px; }
+  .pr-nivel-2 { margin-left: 36px; }
+  .pr-punto-cabeza { font-size: 12.5pt; margin: 0 0 2px; }
+  .pr-marcador { font-weight: 700; color: #A8823C; margin-right: 6px; }
+  .pr-punto-titulo { font-weight: 700; color: #1b1b1b; }
+  .pr-versos { font-size: 9.5pt; color: #5b3a6e; margin: 0 0 3px; }
+  .pr-texto { font-size: 11pt; line-height: 1.5; margin: 0 0 3px; color: #1b1b1b; }
+
+  .pr-mark { background: #f3e3b3; padding: 0 2px; box-decoration-break: clone; }
+  .pr-sup { color: #A8823C; font-weight: 700; font-size: 0.7em; }
+
+  .pr-notas { margin: 3px 0 0 12px; }
+  .pr-nota { font-size: 8.5pt; line-height: 1.35; color: #555; margin: 0 0 1px; }
+  .pr-nota sup { color: #A8823C; font-weight: 700; margin-right: 3px; }
+  .pr-nota-bloque { color: #6b4a3a; }
+}

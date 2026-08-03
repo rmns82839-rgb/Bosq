@@ -338,8 +338,7 @@
 }
 
 /* Sin miniaturas y con letra más grande para leer de lejos */
-.modo-predicacion .dp-rail,
-.modo-predicacion .dp-rail-toggle { display: none !important; }
+.modo-predicacion .dp-rail-toggle { display: inline-flex !important; }
 
 .modo-predicacion .dp-titulo { font-size: 2.1rem; line-height: 1.25; }
 .modo-predicacion .dp-texto  { font-size: 1.55rem; line-height: 1.7; }
@@ -349,3 +348,20 @@
   .modo-predicacion .dp-titulo { font-size: 1.75rem; }
   .modo-predicacion .dp-texto  { font-size: 1.3rem; }
 }
+
+/* ── Formato ligero en el texto del bosquejo ── */
+.texto-negrita {
+  font-weight: 700;
+  color: inherit;
+}
+.texto-resaltado {
+  background: rgba(201, 168, 76, 0.35);
+  color: inherit;
+  padding: 0 3px;
+  border-radius: 3px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* En el modo predicación, un resaltado un poco más marcado para verlo de lejos */
+.modo-predicacion .texto-resaltado { background: rgba(201, 168, 76, 0.45); }

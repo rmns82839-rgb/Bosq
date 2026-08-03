@@ -6,10 +6,9 @@ import Modal from '../common/Modal';
  * nunca tiene scroll interno — siempre ves todo lo que escribiste, desde
  * la primera línea.
  *
- * Los estilos críticos van EN LÍNEA a propósito (overflow, resize, height):
- * si dependieran de una hoja de estilos, cualquier regla que llegara
- * después podría reimponer un alto fijo y el campo volvería a esconder
- * el texto. Así el comportamiento queda garantizado.
+ * Formato ligero (Markdown-style): **negrita** y ==resaltado==. Los
+ * marcadores se guardan dentro del mismo texto plano, así no cambia nada
+ * del guardar/cargar/notas; se renderizan bonito al leer y al predicar.
  */
 export default function CampoTexto({ value, onChange, placeholder, minRows = 2, className = '' }) {
   const taRef = useRef(null);
@@ -63,6 +62,26 @@ export default function CampoTexto({ value, onChange, placeholder, minRows = 2, 
     });
   };
 
+  // Envuelve la selección (o inserta en el cursor) con una marca de formato.
+  const envolver = (marca) => {
+    const el = taRef.current;
+    const texto = value || '';
+    const inicio = el?.selectionStart ?? texto.length;
+    const fin = el?.selectionEnd ?? texto.length;
+    const seleccion = texto.slice(inicio, fin);
+    const nuevo = texto.slice(0, inicio) + marca + seleccion + marca + texto.slice(fin);
+    onChange(nuevo);
+    requestAnimationFrame(() => {
+      if (!el) return;
+      el.focus();
+      const pos = seleccion
+        ? inicio + marca.length + seleccion.length + marca.length
+        : inicio + marca.length;
+      el.setSelectionRange(pos, pos);
+      ajustar();
+    });
+  };
+
   return (
     <div className="be-campo-notas">
       <textarea
@@ -81,9 +100,12 @@ export default function CampoTexto({ value, onChange, placeholder, minRows = 2, 
           boxSizing: 'border-box',
         }}
       />
-      <button type="button" className="be-btn-insertar-nota" onClick={abrirModal}>
-        📝 + Nota aquí
-      </button>
+
+      <div className="be-formato-barra">
+        <button type="button" className="be-formato-btn" onClick={() => envolver('**')} title="Negrita (rodea la palabra seleccionada)"><b>N</b></button>
+        <button type="button" className="be-formato-btn" onClick={() => envolver('==')} title="Resaltar (rodea la palabra seleccionada)">🖍</button>
+        <button type="button" className="be-btn-insertar-nota" onClick={abrirModal}>📝 + Nota aquí</button>
+      </div>
 
       <Modal
         open={modalAbierto}

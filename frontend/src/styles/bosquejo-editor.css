@@ -771,3 +771,26 @@ select.be-proposito {
   width: 40px; height: 4px; border-radius: 999px;
   background: var(--cuero-borde, rgba(107,74,58,0.4));
 }
+
+/* ── Barra de formato del campo de texto ── */
+.be-formato-barra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.be-formato-btn {
+  min-width: 34px; min-height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  padding: 0 8px;
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.35));
+  border-radius: 8px;
+  background: var(--pergamino, #F7F1E3);
+  color: var(--tinta, #1C1A17);
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.be-formato-btn:hover { background: var(--pergamino-sombra, rgba(107,74,58,0.1)); border-color: var(--laton, #A8823C); }

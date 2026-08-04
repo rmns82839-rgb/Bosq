@@ -23,6 +23,7 @@ import Patrones from './pages/Patrones';
 import JesusEnLibros from './pages/JesusEnLibros';
 import BibliaLayout from './components/biblia/BibliaLayout';
 import Tabernaculo from './pages/Tabernaculo';
+import Salmos from './pages/Salmos'
 
 import BibliaDashboard from './pages/BibliaDashboard';
 
@@ -64,6 +65,8 @@ function App() {
           <Route path="/biblia/especiales" element={<ProtectedRoute><BibliaLayout titulo="Estudios Especiales"><Especiales /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/jesus-en-libros" element={<ProtectedRoute><BibliaLayout titulo="Jesús en Cada Libro"><JesusEnLibros /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/patrones" element={<ProtectedRoute><BibliaLayout titulo="Patrones"><Patrones /></BibliaLayout></ProtectedRoute>} />
+          <Route path="/biblia/salmos" element={<ProtectedRoute><BibliaLayout titulo="Salmos"><Salmos /></BibliaLayout></ProtectedRoute>} />
+        
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

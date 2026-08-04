@@ -16,7 +16,8 @@ import {
   BarChart3,
   Church,
   UserCircle,
-  Building2
+  Building2,
+  Music
 } from 'lucide-react';
 
 const modulosBiblia = [
@@ -29,6 +30,7 @@ const modulosBiblia = [
   { emoji: '⭐', label: 'Estudios', ruta: '/biblia/especiales', icon: Star },
   { emoji: '🏛️', label: 'Tabernáculo', ruta: '/biblia/tabernaculo', icon: Building2 },
   { emoji: '📊', label: 'Patrones', ruta: '/biblia/patrones', icon: BarChart3 },
+  { emoji: '🎵', label: 'Salmos', ruta: '/biblia/salmos', icon: Music },
 ];
 
 const Header = () => {

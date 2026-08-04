@@ -4,6 +4,7 @@ import Header from '../components/common/Header';
 
 const modulos = [
   { titulo: 'Leer la Biblia', descripcion: 'Abre la RVR1960 en YouVersion', emoji: '📖', ruta: 'https://www.bible.com/bible/149/GEN.1.RVR1960', externo: true },
+  { titulo: 'Salmos', descripcion: 'Lectura y estudio del libro de los Salmos', emoji: '🎵', ruta: '/biblia/salmos' },
   { titulo: 'Angelología', descripcion: 'Estudio de los ángeles en la Biblia', emoji: '👼', ruta: '/biblia/angelologia' },
   { titulo: 'Cristología', descripcion: 'Estudio de Jesucristo en las Escrituras', emoji: '✝️', ruta: '/biblia/cristologia' },
   { titulo: 'Numerología', descripcion: 'Significado de los números bíblicos', emoji: '🔢', ruta: '/biblia/numerologia' },

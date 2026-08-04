@@ -17,6 +17,7 @@ const modulosBiblia = [
   { emoji: '🗝️', label: 'Jesús en Cada Libro', ruta: '/biblia/jesus-en-libros' },
   { emoji: '📊', label: 'Patrones', ruta: '/biblia/patrones' },
   { emoji: '🏛️', label: 'Tabernáculo', ruta: '/biblia/tabernaculo' },
+  { emoji: '🎵', label: 'Salmos', ruta: '/biblia/salmos' },
 ];
 
 const BibliaLayout = ({ children, titulo }) => {

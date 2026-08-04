@@ -53,7 +53,50 @@ function PieNotas({ notas, notaBloque }) {
   );
 }
 
+// Tabla de paralelos para el PDF: tabla real (lado a lado), que en papel
+// se lee bien y pagina sola. El título va en la cabecera del punto.
+function ParaleloImpreso({ punto }) {
+  const cols = Array.isArray(punto.columnas) && punto.columnas.length ? punto.columnas : ['', ''];
+  const filas = Array.isArray(punto.filas) ? punto.filas : [];
+  if (filas.length === 0) return null;
+
+  return (
+    <table className="pr-paralelo-tabla">
+      <thead>
+        <tr>
+          {cols.map((c, ci) => (
+            <th key={ci} className="pr-paralelo-th">{c || `Columna ${ci + 1}`}</th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {filas.map((fila, fi) => (
+          <tr key={fi}>
+            {cols.map((_, ci) => (
+              <td key={ci} className="pr-paralelo-td">{(fila && fila[ci]) || ''}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+
 function renderPunto(p, nivel, i, salida) {
+  if (p.tipo === 'paralelo') {
+    salida.push(
+      <div key={`pt-${nivel}-${i}-${salida.length}`} className={`pr-punto pr-nivel-${Math.min(nivel, 2)}`}>
+        <p className="pr-punto-cabeza">
+          <span className="pr-marcador">{marcador(nivel, i)}.</span>
+          {p.titulo && <span className="pr-punto-titulo">{p.titulo}</span>}
+        </p>
+        <ParaleloImpreso punto={p} />
+      </div>
+    );
+    if (Array.isArray(p.subpuntos)) p.subpuntos.forEach((sp, j) => renderPunto(sp, nivel + 1, j, salida));
+    return;
+  }
   const notas = [];
   const cuerpo = p.descripcion ?? p.desarrollo ?? '';
   const cuerpoNodos = renderImpreso(cuerpo, notas, `p-${nivel}-${i}`);

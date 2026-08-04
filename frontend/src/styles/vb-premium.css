@@ -413,3 +413,63 @@
   .pr-nota sup { color: #A8823C; font-weight: 700; margin-right: 3px; }
   .pr-nota-bloque { color: #6b4a3a; }
 }
+
+/* ── Tabla de paralelos (lectura / predicación) ── */
+.vb-paralelo { width: 100%; }
+
+/* Cabecera: lado a lado en PC */
+.vb-paralelo-cabecera { display: none; gap: 12px; margin-bottom: 10px; }
+.vb-paralelo-th {
+  flex: 1; text-align: center;
+  font-family: 'Lora', serif; font-weight: 700; font-size: 1.05rem;
+  color: #A8823C; padding: 6px 10px;
+  border-bottom: 2px solid rgba(168,130,60,0.4);
+}
+
+.vb-paralelo-cuerpo { display: flex; flex-direction: column; gap: 12px; }
+.vb-paralelo-fila {
+  display: flex; flex-direction: column; gap: 8px;
+  padding-bottom: 12px; border-bottom: 1px solid rgba(107,74,58,0.15);
+}
+.vb-paralelo-td { display: flex; flex-direction: column; gap: 2px; }
+
+/* En MÓVIL: apilado, cada celda con su etiqueta arriba */
+.vb-paralelo-etiqueta {
+  font-family: var(--font-mono, monospace); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.06em; color: #A8823C; font-weight: 700;
+}
+.vb-paralelo-valor { font-size: 1.05rem; line-height: 1.5; }
+
+/* En PC (≥640px): lado a lado, sin etiquetas repetidas */
+@media (min-width: 640px) {
+  .vb-paralelo-cabecera { display: flex; }
+  .vb-paralelo-fila { flex-direction: row; gap: 12px; align-items: stretch; }
+  .vb-paralelo-td { flex: 1; }
+  .vb-paralelo-etiqueta { display: none; }
+  .vb-paralelo-valor {
+    padding: 4px 10px;
+    border-left: 3px solid rgba(168,130,60,0.25);
+  }
+}
+
+/* En predicación, un poco más grande */
+.modo-predicacion .vb-paralelo-valor { font-size: 1.35rem; }
+.modo-predicacion .vb-paralelo-th { font-size: 1.3rem; }
+
+@media print {
+  .pr-paralelo-tabla {
+    width: 100%; border-collapse: collapse; margin: 4px 0 6px;
+    break-inside: auto;
+  }
+  .pr-paralelo-tabla tr { break-inside: avoid; }
+  .pr-paralelo-th {
+    font-size: 10pt; font-weight: 700; color: #A8823C; text-align: left;
+    padding: 4px 8px; border-bottom: 1.5px solid #A8823C;
+    width: 50%;
+  }
+  .pr-paralelo-td {
+    font-size: 10.5pt; line-height: 1.4; color: #1b1b1b;
+    padding: 5px 8px; vertical-align: top;
+    border-bottom: 1px solid #e0d5c0; width: 50%;
+  }
+}

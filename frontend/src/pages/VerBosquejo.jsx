@@ -68,6 +68,41 @@ function ModalNota({ titulo, texto, onCerrar }) {
   );
 }
 
+/* Tabla de paralelos en lectura/predicación. En móvil se apila (cada celda
+ * con su etiqueta); en PC va lado a lado. Lo controla el CSS. */
+function TablaParalelo({ punto }) {
+  const cols = Array.isArray(punto.columnas) && punto.columnas.length ? punto.columnas : ['', ''];
+  const filas = Array.isArray(punto.filas) ? punto.filas : [];
+  if (filas.length === 0) return null;
+
+  return (
+    <div className={`vb-paralelo vb-paralelo-cols-${cols.length}`}>
+      {punto.titulo && <h2 className="dp-titulo mb-3">{punto.titulo}</h2>}
+
+      <div className="vb-paralelo-cabecera">
+        {cols.map((c, ci) => (
+          <div key={ci} className="vb-paralelo-th">{c || `Columna ${ci + 1}`}</div>
+        ))}
+      </div>
+
+      <div className="vb-paralelo-cuerpo">
+        {filas.map((fila, fi) => (
+          <div key={fi} className="vb-paralelo-fila">
+            {cols.map((_, ci) => (
+              <div key={ci} className="vb-paralelo-td">
+                <span className="vb-paralelo-etiqueta">{cols[ci] || `Columna ${ci + 1}`}</span>
+                <span className="vb-paralelo-valor">{(fila && fila[ci]) || ''}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
 /** Recorre puntos y subpuntos (cualquier nivel) y arma una diapositiva
  * por cada uno, en el mismo orden en que se leen. */
 function recolectarPuntos(lista, nivel, diapositivas) {
@@ -242,6 +277,13 @@ const VerBosquejo = () => {
     if (slide.tipo === 'punto') {
       const p = slide.datos;
       const cuerpo = p.descripcion ?? p.desarrollo ?? '';
+      if (p.tipo === 'paralelo') {
+        return (
+          <div className={p.recuadro ? 'be-diapo-recuadro' : undefined}>
+            <TablaParalelo punto={p} />
+          </div>
+        );
+      }
       return (
         <div className={p.recuadro ? 'be-diapo-recuadro' : undefined}>
           {p.titulo && <h2 className="dp-titulo mb-3">{p.titulo}</h2>}

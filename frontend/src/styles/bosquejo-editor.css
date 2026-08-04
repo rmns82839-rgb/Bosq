@@ -794,3 +794,50 @@ select.be-proposito {
   transition: background .12s, border-color .12s;
 }
 .be-formato-btn:hover { background: var(--pergamino-sombra, rgba(107,74,58,0.1)); border-color: var(--laton, #A8823C); }
+
+/* ── Editor de tabla de paralelos ── */
+.be-paralelo { display: flex; flex-direction: column; gap: 10px; }
+.be-paralelo-titulo { font-weight: 600; }
+
+.be-paralelo-cols { display: flex; gap: 8px; flex-wrap: wrap; }
+.be-paralelo-cabecera {
+  flex: 1 1 45%; min-width: 130px;
+  font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700;
+  padding: 8px 12px;
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.35));
+  border-radius: 9px;
+  background: rgba(168,130,60,0.08);
+  color: var(--laton, #A8823C);
+  outline: none;
+}
+
+.be-paralelo-filas { display: flex; flex-direction: column; gap: 8px; }
+.be-paralelo-fila {
+  display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap;
+  padding: 8px; border-radius: 10px;
+  background: var(--pergamino-sombra, rgba(107,74,58,0.06));
+}
+.be-paralelo-celda {
+  flex: 1 1 45%; min-width: 120px;
+  font-family: var(--font-mono); font-size: 0.86rem;
+  padding: 8px 10px; resize: vertical;
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.3));
+  border-radius: 8px;
+  background: var(--pergamino, #F7F1E3);
+  color: var(--tinta, #1C1A17);
+  outline: none;
+}
+.be-paralelo-quitar {
+  flex-shrink: 0; width: 30px; height: 30px;
+  border: 1px solid var(--cuero-borde, rgba(107,74,58,0.3));
+  border-radius: 8px; background: transparent;
+  color: var(--cuero, #6B4A3A); cursor: pointer;
+}
+.be-paralelo-vacio { font-family: var(--font-mono); font-size: 0.78rem; color: var(--cuero, #6B4A3A); opacity: 0.7; margin: 0; }
+.be-paralelo-agregar {
+  align-self: flex-start;
+  font-family: var(--font-mono); font-size: 0.82rem;
+  padding: 8px 16px;
+  border: 1px dashed var(--laton, #A8823C); border-radius: 9px;
+  background: transparent; color: var(--laton, #A8823C); cursor: pointer;
+}

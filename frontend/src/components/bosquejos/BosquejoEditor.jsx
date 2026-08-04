@@ -4,6 +4,7 @@ import { VersiculoLink } from '../../lib/bibliaLink';
 import NotaBoton from './NotaBoton';
 import CampoTexto from './CampoTexto';
 import CampoLinea from './CampoLinea';
+import EditorParalelo from './EditorParalelo';
 import Diapositivas from '../common/Diapositivas';
 import '../../styles/bosquejo-editor.css';
 import '../../styles/be-premium.css';
@@ -262,6 +263,15 @@ const nuevoPunto = () => ({
   subpuntos: [],
 });
 
+const nuevoParalelo = () => ({
+  id: `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+  tipo: 'paralelo',
+  titulo: '',
+  columnas: ['', ''],
+  filas: [],
+  subpuntos: [],
+});
+
 const arrayMove = (lista, desde, hasta) => {
   const copia = [...lista];
   const [item] = copia.splice(desde, 1);
@@ -323,15 +333,27 @@ function moverAbajo(puntos, ruta) {
 /** Normaliza datos viejos: puntos planos sin id, sin subpuntos. */
 function normalizar(puntos) {
   if (!Array.isArray(puntos) || puntos.length === 0) return [];
-  return puntos.map((p) => ({
-    id: p.id || `p_${Math.random().toString(36).slice(2, 9)}`,
-    titulo: p.titulo || '',
-    descripcion: p.descripcion ?? p.desarrollo ?? '',
-    versos: p.versos || '',
-    notas: p.notas || '',
-    recuadro: !!p.recuadro,
-    subpuntos: normalizarHijos(p.subpuntos),
-  }));
+  return puntos.map((p) => (
+    p.tipo === 'paralelo'
+      ? {
+          id: p.id || `p_${Math.random().toString(36).slice(2, 9)}`,
+          tipo: 'paralelo',
+          titulo: p.titulo || '',
+          columnas: Array.isArray(p.columnas) && p.columnas.length ? p.columnas : ['', ''],
+          filas: Array.isArray(p.filas) ? p.filas : [],
+          recuadro: !!p.recuadro,
+          subpuntos: normalizarHijos(p.subpuntos),
+        }
+      : {
+          id: p.id || `p_${Math.random().toString(36).slice(2, 9)}`,
+          titulo: p.titulo || '',
+          descripcion: p.descripcion ?? p.desarrollo ?? '',
+          versos: p.versos || '',
+          notas: p.notas || '',
+          recuadro: !!p.recuadro,
+          subpuntos: normalizarHijos(p.subpuntos),
+        }
+  ));
 }
 const normalizarHijos = (subs) =>
   !Array.isArray(subs) || subs.length === 0 ? [] : normalizar(subs);
@@ -434,8 +456,18 @@ export default function BosquejoEditor({
         setPuntos(agregarPuntoObj(puntos, rutaPadre, nuevo));
         enfocarIdRef.current = nuevo.id;
       },
+      agregarParalelo: (rutaPadre) => {
+        const nuevo = nuevoParalelo();
+        setPuntos(agregarPuntoObj(puntos, rutaPadre, nuevo));
+        enfocarIdRef.current = nuevo.id;
+      },
       insertarAntes: (ruta) => {
         const nuevo = nuevoPunto();
+        setPuntos(insertarAntesObj(puntos, ruta, nuevo));
+        enfocarIdRef.current = nuevo.id;
+      },
+      insertarParaleloAntes: (ruta) => {
+        const nuevo = nuevoParalelo();
         setPuntos(insertarAntesObj(puntos, ruta, nuevo));
         enfocarIdRef.current = nuevo.id;
       },
@@ -551,22 +583,41 @@ export default function BosquejoEditor({
     if (slide.tipo === 'punto') {
       const { punto: p, ruta, nivel, indice, total } = slide;
       const puedeAnidar = nivel < MAX_NIVEL;
+      const esParalelo = p.tipo === 'paralelo';
+      const encabezado = (
+        <div className="dp-punto-encabezado">
+          <span className="dp-marcador-grande">{marcador(nivel, indice)}.</span>
+          <div className="be-orden-botones">
+            <button type="button" className="be-icono" onClick={() => acciones.moverArriba(ruta)} disabled={indice === 0} title="Mover arriba">▲</button>
+            <button type="button" className="be-icono" onClick={() => acciones.moverAbajo(ruta)} disabled={indice === total - 1} title="Mover abajo">▼</button>
+          </div>
+          <button
+            type="button"
+            className={p.recuadro ? 'be-icono be-icono-recuadro-on' : 'be-icono'}
+            onClick={() => acciones.editar(ruta, 'recuadro', !p.recuadro)}
+            title={p.recuadro ? 'Quitar recuadro' : 'Destacar con recuadro'}
+          >▢</button>
+          <button type="button" className="be-icono be-icono-borrar" onClick={() => acciones.eliminar(ruta)} title="Eliminar este punto">✕</button>
+        </div>
+      );
+
+      if (esParalelo) {
+        return (
+          <div className={p.recuadro ? 'be-diapo-recuadro' : undefined}>
+            {encabezado}
+            <EditorParalelo punto={p} ruta={ruta} acciones={acciones} />
+            <div className="be-punto-acciones-pie">
+              <button type="button" className="be-agregar-sub" onClick={() => acciones.insertarAntes(ruta)}>
+                + Insertar punto antes
+              </button>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className={p.recuadro ? 'be-diapo-recuadro' : undefined}>
-          <div className="dp-punto-encabezado">
-            <span className="dp-marcador-grande">{marcador(nivel, indice)}.</span>
-            <div className="be-orden-botones">
-              <button type="button" className="be-icono" onClick={() => acciones.moverArriba(ruta)} disabled={indice === 0} title="Mover arriba">▲</button>
-              <button type="button" className="be-icono" onClick={() => acciones.moverAbajo(ruta)} disabled={indice === total - 1} title="Mover abajo">▼</button>
-            </div>
-            <button
-              type="button"
-              className={p.recuadro ? 'be-icono be-icono-recuadro-on' : 'be-icono'}
-              onClick={() => acciones.editar(ruta, 'recuadro', !p.recuadro)}
-              title={p.recuadro ? 'Quitar recuadro' : 'Destacar con recuadro'}
-            >▢</button>
-            <button type="button" className="be-icono be-icono-borrar" onClick={() => acciones.eliminar(ruta)} title="Eliminar este punto">✕</button>
-          </div>
+          {encabezado}
 
           <CampoLinea
             className="be-titulo-punto dp-titulo-input"
@@ -619,6 +670,9 @@ export default function BosquejoEditor({
         <div className="dp-agregar-centro">
           <button type="button" className="be-btn be-btn-principal" onClick={() => acciones.agregar([])}>
             + Agregar punto principal
+          </button>
+          <button type="button" className="be-btn be-btn-plano" onClick={() => acciones.agregarParalelo([])} style={{ marginTop: 10 }}>
+            + Agregar tabla de paralelos
           </button>
           <p className="dp-agregar-nota">
             {totalPuntos === 0

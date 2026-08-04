@@ -35,6 +35,7 @@ export default function Salmos() {
   const [loading, setLoading] = useState(true)
   const [filtroEvoca, setFiltroEvoca] = useState('todos')
   const [filtroServicio, setFiltroServicio] = useState('todos')
+  const [soloMesianicos, setSoloMesianicos] = useState(false)
   const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
@@ -44,18 +45,22 @@ export default function Salmos() {
   const filtrados = salmos.filter(s => {
     const mE = filtroEvoca === 'todos' || s.evoca === filtroEvoca
     const mS = filtroServicio === 'todos' || (Array.isArray(s.servicios) && s.servicios.includes(filtroServicio))
+    const mM = !soloMesianicos || !!s.mesianico
     const mB = !busqueda ||
       String(s.numero).includes(busqueda) ||
       s.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       s.autor.toLowerCase().includes(busqueda.toLowerCase()) ||
       s.ideaCentral.toLowerCase().includes(busqueda.toLowerCase())
-    return mE && mS && mB
+    return mE && mS && mM && mB
   })
+
+  const contarMesianicos = salmos.filter(s => s.mesianico).length
 
   const contarEvoca = (k) => salmos.filter(s => s.evoca === k).length
   const contarServicio = (k) => salmos.filter(s => s.servicios?.includes(k)).length
 
   const activosTexto = [
+    soloMesianicos ? 'Mesiánicos' : null,
     filtroEvoca !== 'todos' ? EVOCA[filtroEvoca]?.label : null,
     filtroServicio !== 'todos' ? SERVICIOS[filtroServicio]?.label : null,
   ].filter(Boolean).join(' · ')
@@ -81,7 +86,15 @@ export default function Salmos() {
       />
 
       <FiltrosDesplegable label="Filtros" activos={activosTexto}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em', width: '100%' }}>QUÉ EVOCA</span>
+        {contarMesianicos > 0 && (
+          <>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em', width: '100%' }}>CRISTO EN LOS SALMOS</span>
+            <Chip activo={soloMesianicos} color="#E0B0FF" onClick={() => setSoloMesianicos(v => !v)}>
+              ✝️ Solo mesiánicos ({contarMesianicos})
+            </Chip>
+          </>
+        )}
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em', width: '100%', marginTop: 6 }}>QUÉ EVOCA</span>
         <Chip activo={filtroEvoca === 'todos'} onClick={() => setFiltroEvoca('todos')}>
           Todos ({salmos.length})
         </Chip>
@@ -161,6 +174,16 @@ export default function Salmos() {
                   <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: info.color, letterSpacing: '0.06em', display: 'block', marginBottom: 3 }}>IDEA CENTRAL</span>
                   <p style={{ fontSize: 12.5, color: 'var(--text)', lineHeight: 1.5, margin: 0 }}>{s.ideaCentral}</p>
                 </div>
+
+                {s.mesianico && (
+                  <div style={{
+                    background: 'rgba(224,176,255,0.08)', borderLeft: '3px solid #E0B0FF',
+                    borderRadius: 6, padding: '8px 10px',
+                  }}>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: '#C77DFF', letterSpacing: '0.06em', display: 'block', marginBottom: 3 }}>✝️ CUMPLIMIENTO EN CRISTO</span>
+                    <p style={{ fontSize: 12.5, color: 'var(--text)', lineHeight: 1.5, margin: 0 }}>{s.mesianico}</p>
+                  </div>
+                )}
 
                 <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   {(s.servicios || []).map(sv => (

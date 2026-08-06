@@ -2,8 +2,8 @@ import { useState } from 'react'
 
 /**
  * Contenedor desplegable para los chips de filtro — look premium.
- * Botón compacto con chevron discreto y animación suave de apertura.
- * Cerrado por defecto en celular (gana espacio); abierto en PC.
+ * Los chips van en GRID de columnas iguales (simétricos en todas las pages);
+ * el texto largo envuelve y llenan su celda. Cerrado por defecto en celular.
  */
 export default function FiltrosDesplegable({ label = 'Filtros', activos, children }) {
   const [abierto, setAbierto] = useState(
@@ -33,11 +33,10 @@ export default function FiltrosDesplegable({ label = 'Filtros', activos, childre
             <span style={{
               fontSize: 9.5, padding: '2px 8px', borderRadius: 999,
               background: 'var(--gold)', color: '#1a1a1a', fontWeight: 600,
-              maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>{activos}</span>
           )}
         </span>
-        {/* Chevron discreto en SVG (no la flecha enorme) */}
         <span style={{
           display: 'inline-flex', width: 18, height: 18, alignItems: 'center', justifyContent: 'center',
           transition: 'transform .25s ease', transform: abierto ? 'rotate(180deg)' : 'none',
@@ -55,7 +54,10 @@ export default function FiltrosDesplegable({ label = 'Filtros', activos, childre
       }}>
         <div style={{ overflow: 'hidden', minHeight: 0 }}>
           <div style={{
-            display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 148px), 1fr))',
+            gap: 8,
+            alignItems: 'stretch',
             paddingTop: 12,
           }}>
             {children}

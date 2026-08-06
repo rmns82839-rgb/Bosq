@@ -79,7 +79,7 @@ export default function Salmos() {
       </div>
 
       <input
-        style={{ width: '100%', maxWidth: 320, boxSizing: 'border-box', background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '10px 14px', borderRadius: 'var(--radius)', outline: 'none', marginBottom: 12 }}
+        style={{ width: '100%', gridColumn: '1 / -1', maxWidth: 320, boxSizing: 'border-box', background: 'var(--surface2)', border: '1px solid var(--border2)', color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 13, padding: '10px 14px', borderRadius: 'var(--radius)', outline: 'none', marginBottom: 12 }}
         placeholder="Buscar salmo, autor o tema..."
         value={busqueda}
         onChange={e => setBusqueda(e.target.value)}
@@ -94,7 +94,7 @@ export default function Salmos() {
             </Chip>
           </>
         )}
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em', width: '100%', marginTop: 6 }}>QUÉ EVOCA</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em', width: '100%', gridColumn: '1 / -1', marginTop: 6 }}>QUÉ EVOCA</span>
         <Chip activo={filtroEvoca === 'todos'} onClick={() => setFiltroEvoca('todos')}>
           Todos ({salmos.length})
         </Chip>
@@ -106,7 +106,7 @@ export default function Salmos() {
           )
         ))}
 
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em', width: '100%', marginTop: 6 }}>PARA QUÉ CULTO</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.08em', width: '100%', gridColumn: '1 / -1', marginTop: 6 }}>PARA QUÉ CULTO</span>
         <Chip activo={filtroServicio === 'todos'} onClick={() => setFiltroServicio('todos')}>
           Cualquiera
         </Chip>

@@ -30,6 +30,7 @@ import BibliaDashboard from './pages/BibliaDashboard';
 import CursoDashboard from './pages/CursoDashboard'
 import CursoDetalle from './pages/CursoDetalle'
 import LeccionVista from './pages/LeccionVista'
+import CursoProgreso from './pages/CursoProgreso'
 
 
 const queryClient = new QueryClient();
@@ -73,6 +74,7 @@ function App() {
           <Route path="/curso" element={<ProtectedRoute><CursoDashboard /></ProtectedRoute>} />
           <Route path="/curso/:slug" element={<ProtectedRoute><CursoDetalle /></ProtectedRoute>} />
           <Route path="/curso/leccion/:id" element={<ProtectedRoute><LeccionVista /></ProtectedRoute>} />
+          <Route path="/curso/:slug/progreso" element={<ProtectedRoute><CursoProgreso /></ProtectedRoute>} />
         
         </Routes>
       </BrowserRouter>

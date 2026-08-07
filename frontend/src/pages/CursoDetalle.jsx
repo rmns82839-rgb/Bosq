@@ -43,6 +43,17 @@ export default function CursoDetalle() {
               {curso.descripcion && (
                 <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{curso.descripcion}</p>
               )}
+              <Link
+                to={`/curso/${slug}/progreso`}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12,
+                  fontFamily: 'var(--mono)', fontSize: 12, padding: '8px 16px', borderRadius: 999,
+                  textDecoration: 'none', color: 'var(--gold)',
+                  border: '1px solid rgba(201,168,76,0.4)', background: 'rgba(201,168,76,0.1)',
+                }}
+              >
+                📊 Ver mi progreso
+              </Link>
             </div>
 
             {lecciones.length === 0 && (

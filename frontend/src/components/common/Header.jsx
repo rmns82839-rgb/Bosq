@@ -57,9 +57,22 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <span className="text-xl sm:text-2xl font-cursive text-[#C9A84C]">
-              ✝️ Bosqu
+              ✝️ Eclesiastés
             </span>
           </Link>
+
+          <Link
+  to="/curso"
+  style={{
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    fontFamily: 'var(--mono)', fontSize: 12, padding: '6px 14px',
+    borderRadius: 999, textDecoration: 'none',
+    color: '#C9A84C', border: '1px solid rgba(201,168,76,0.4)',
+    background: 'rgba(201,168,76,0.1)',
+  }}
+>
+  ✦ Curso
+</Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
@@ -154,6 +167,8 @@ const Header = () => {
                 <span>{m.emoji}</span> {m.label}
               </Link>
             ))}
+
+            
 
             <button
               onClick={handleLogout}

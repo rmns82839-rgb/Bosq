@@ -1,4 +1,4 @@
-# Bosqu - Aplicación de Bosquejos Bíblicos
+# Eclesiastes- Aplicación de Bosquejos Bíblicos
 
 Aplicación full-stack para crear y gestionar bosquejos bíblicos.
 

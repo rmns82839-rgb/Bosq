@@ -135,15 +135,15 @@ model EspirituSanto {
 }
 
 model JesusEnLibro {
-  id                   String   @id @default(cuid())
-  libro                String
-  orden                Int
-  testamento           String
-  titulo               String
-  cita                 String?
-  descripcion          String?
-  referenciasAdicionales Json   @default("[]")
-  createdAt            DateTime @default(now())
+  id                     String   @id @default(cuid())
+  libro                  String
+  orden                  Int
+  testamento             String
+  titulo                 String
+  cita                   String?
+  descripcion            String?
+  referenciasAdicionales Json     @default("[]")
+  createdAt              DateTime @default(now())
 
   @@map("jesus_en_libros")
 }
@@ -174,7 +174,7 @@ model MilagroJesus {
 model ElementoTabernaculo {
   id              String   @id @default(cuid())
   nombre          String
-  seccion         String   // atrio | lugar_santo | lugar_santisimo | estructura | sacerdocio
+  seccion         String // atrio | lugar_santo | lugar_santisimo | estructura | sacerdocio
   cita            String?
   tipologiaCristo String?
   descripcion     String?
@@ -194,4 +194,180 @@ model FiguraIglesia {
   createdAt        DateTime @default(now())
 
   @@map("figuras_iglesia")
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CURSO DE TEOLOGÍA SISTEMÁTICA — modelo multi-libro
+// ═══════════════════════════════════════════════════════════════
+
+// ── CONTENIDO ──────────────────────────────────────────────────
+
+model Curso {
+  id              String    @id @default(cuid())
+  slug            String    @unique // "apocalipsis", "daniel"
+  nombre          String // "Apocalipsis"
+  descripcion     String?
+  autor           String? // "Juan"
+  fechaEscritura  String? // "c. 95 d.C."
+  contextoGeneral String?
+  orden           Int       @default(0)
+  activo          Boolean   @default(false) // publicado o no
+  creadoEn        DateTime  @default(now())
+  lecciones       Leccion[]
+
+  @@index([activo, orden])
+}
+
+model Leccion {
+  id                String   @id @default(cuid())
+  cursoId           String
+  curso             Curso    @relation(fields: [cursoId], references: [id], onDelete: Cascade)
+  orden             Int
+  semana            Int?
+  titulo            String // "Las siete iglesias"
+  tema              String?
+  pasajeBase        String? // "Apocalipsis 2–3"
+  introduccion      String?
+  contextoHistorico String?
+  creadoEn          DateTime @default(now())
+
+  versiculosMemoria VersiculoMemoria[]
+  interpretaciones  Interpretacion[]
+  simbolos          Simbolo[]
+  tipologias        Tipologia[]
+  profecias         Profecia[]
+  ciudades          Ciudad[]
+  preguntas         Pregunta[]
+  progresos         Progreso[]
+  intentos          IntentoExamen[]
+
+  @@unique([cursoId, orden])
+  @@index([cursoId])
+}
+
+model VersiculoMemoria {
+  id        String  @id @default(cuid())
+  leccionId String
+  leccion   Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  cita      String // "Apocalipsis 3:20"
+  texto     String
+  orden     Int     @default(0)
+
+  @@index([leccionId])
+}
+
+model Interpretacion {
+  id              String  @id @default(cuid())
+  leccionId       String
+  leccion         Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  escuela         String // preterista|historicista|futurista|idealista
+  contenido       String
+  esPosturaPropia Boolean @default(false)
+  orden           Int     @default(0)
+
+  @@index([leccionId])
+}
+
+model Simbolo {
+  id          String  @id @default(cuid())
+  leccionId   String
+  leccion     Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  nombre      String // "la bestia"
+  significado String
+  referencias String?
+  orden       Int     @default(0)
+
+  @@index([leccionId])
+}
+
+model Tipologia {
+  id         String  @id @default(cuid())
+  leccionId  String
+  leccion    Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  elemento   String // "el Cordero inmolado"
+  cristoEnEl String // cómo apunta a Cristo
+  cita       String?
+  orden      Int     @default(0)
+
+  @@index([leccionId])
+}
+
+model Profecia {
+  id               String  @id @default(cuid())
+  leccionId        String
+  leccion          Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  tema             String
+  estado           String // cumplida|por_cumplir
+  citaBase         String?
+  citaCumplimiento String?
+  orden            Int     @default(0)
+
+  @@index([leccionId])
+}
+
+model Ciudad {
+  id                String  @id @default(cuid())
+  leccionId         String
+  leccion           Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  nombreBiblico     String // "Éfeso"
+  ubicacion         String? // "Asia Menor (Turquía)"
+  equivalenteActual String? // "cerca de Selçuk, Turquía"
+  nota              String?
+  orden             Int     @default(0)
+
+  @@index([leccionId])
+}
+
+// ── EXÁMENES (validación en backend) ───────────────────────────
+
+model Pregunta {
+  id        String   @id @default(cuid())
+  leccionId String
+  leccion   Leccion  @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  enunciado String
+  orden     Int      @default(0)
+  opciones  Opcion[]
+
+  @@index([leccionId])
+}
+
+model Opcion {
+  id         String   @id @default(cuid())
+  preguntaId String
+  pregunta   Pregunta @relation(fields: [preguntaId], references: [id], onDelete: Cascade)
+  texto      String
+  esCorrecta Boolean  @default(false) // ⚠️ NUNCA se envía al frontend
+  orden      Int      @default(0)
+
+  @@index([preguntaId])
+}
+
+// ── PROGRESO Y EVALUACIÓN POR USUARIO ──────────────────────────
+
+model Progreso {
+  id            String    @id @default(cuid())
+  usuarioId     String // id del usuario (auth de Bosqu)
+  leccionId     String
+  leccion       Leccion   @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  estado        String    @default("no_iniciada") // no_iniciada|en_curso|completada
+  completadaEn  DateTime?
+  actualizadoEn DateTime  @updatedAt
+
+  @@unique([usuarioId, leccionId])
+  @@index([usuarioId])
+}
+
+model IntentoExamen {
+  id            String   @id @default(cuid())
+  usuarioId     String
+  leccionId     String
+  leccion       Leccion  @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  numeroIntento Int // 1, 2, 3
+  puntaje       Int // 0–100
+  aprobado      Boolean  @default(false)
+  respuestas    Json? // { preguntaId: opcionId } — lo que marcó
+  creadoEn      DateTime @default(now())
+
+  @@unique([usuarioId, leccionId, numeroIntento])
+  @@index([usuarioId, leccionId])
 }

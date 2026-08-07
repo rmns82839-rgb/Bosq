@@ -9,7 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Bosqu - Bosquejos Bíblicos',
+        name: 'Eclesiastes- Bosquejos Bíblicos',
         short_name: 'Bosqu',
         description: 'Aplicación para crear y gestionar bosquejos bíblicos',
         theme_color: '#8e44ad',

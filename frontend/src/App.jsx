@@ -27,6 +27,10 @@ import Salmos from './pages/Salmos'
 
 import BibliaDashboard from './pages/BibliaDashboard';
 
+import CursoDashboard from './pages/CursoDashboard'
+import CursoDetalle from './pages/CursoDetalle'
+import LeccionVista from './pages/LeccionVista'
+
 
 const queryClient = new QueryClient();
 
@@ -66,6 +70,9 @@ function App() {
           <Route path="/biblia/jesus-en-libros" element={<ProtectedRoute><BibliaLayout titulo="Jesús en Cada Libro"><JesusEnLibros /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/patrones" element={<ProtectedRoute><BibliaLayout titulo="Patrones"><Patrones /></BibliaLayout></ProtectedRoute>} />
           <Route path="/biblia/salmos" element={<ProtectedRoute><BibliaLayout titulo="Salmos"><Salmos /></BibliaLayout></ProtectedRoute>} />
+          <Route path="/curso" element={<ProtectedRoute><CursoDashboard /></ProtectedRoute>} />
+          <Route path="/curso/:slug" element={<ProtectedRoute><CursoDetalle /></ProtectedRoute>} />
+          <Route path="/curso/leccion/:id" element={<ProtectedRoute><LeccionVista /></ProtectedRoute>} />
         
         </Routes>
       </BrowserRouter>

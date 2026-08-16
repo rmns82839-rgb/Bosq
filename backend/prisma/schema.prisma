@@ -204,14 +204,17 @@ model FiguraIglesia {
 
 model Curso {
   id              String    @id @default(cuid())
-  slug            String    @unique // "apocalipsis", "daniel"
-  nombre          String // "Apocalipsis"
+  slug            String    @unique
+  nombre          String
   descripcion     String?
-  autor           String? // "Juan"
-  fechaEscritura  String? // "c. 95 d.C."
+  autor           String?
+  fechaEscritura  String?
   contextoGeneral String?
+  trasfondoAutor  String?
+  trasfondoEpoca  String?
+  fuentes         String?
   orden           Int       @default(0)
-  activo          Boolean   @default(false) // publicado o no
+  activo          Boolean   @default(false)
   creadoEn        DateTime  @default(now())
   lecciones       Leccion[]
 
@@ -269,13 +272,14 @@ model Interpretacion {
 }
 
 model Simbolo {
-  id          String  @id @default(cuid())
-  leccionId   String
-  leccion     Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
-  nombre      String // "la bestia"
-  significado String
-  referencias String?
-  orden       Int     @default(0)
+  id                String  @id @default(cuid())
+  leccionId         String
+  leccion           Leccion @relation(fields: [leccionId], references: [id], onDelete: Cascade)
+  nombre            String
+  significado       String
+  trasfondoCultural String?
+  referencias       String?
+  orden             Int     @default(0)
 
   @@index([leccionId])
 }

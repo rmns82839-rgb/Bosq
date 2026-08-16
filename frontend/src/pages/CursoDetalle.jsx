@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Header from '../components/common/Header'
 import { getCurso } from '../services/cursoService'
+import CursoSeccion from '../components/curso/CursoSeccion'
 
 export default function CursoDetalle() {
   const { slug } = useParams()
@@ -55,6 +56,36 @@ export default function CursoDetalle() {
                 📊 Ver mi progreso
               </Link>
             </div>
+
+                {(curso.contextoGeneral || curso.trasfondoAutor || curso.trasfondoEpoca || curso.fuentes) && (
+              <div style={{ marginBottom: 28 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.06em', display: 'block', marginBottom: 10 }}>
+                  TRASFONDO DEL LIBRO
+                </span>
+                {curso.contextoGeneral && (
+                  <CursoSeccion titulo="Panorama general" icono="📜">
+                    <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.78)', lineHeight: 1.7, margin: 0 }}>{curso.contextoGeneral}</p>
+                  </CursoSeccion>
+                )}
+                {curso.trasfondoAutor && (
+                  <CursoSeccion titulo="El autor" icono="✍️">
+                    <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.78)', lineHeight: 1.7, margin: 0 }}>{curso.trasfondoAutor}</p>
+                  </CursoSeccion>
+                )}
+                {curso.trasfondoEpoca && (
+                  <CursoSeccion titulo="La época" icono="🏛️">
+                    <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.78)', lineHeight: 1.7, margin: 0 }}>{curso.trasfondoEpoca}</p>
+                  </CursoSeccion>
+                )}
+                {curso.fuentes && (
+                  <CursoSeccion titulo="Fuentes históricas" icono="📚">
+                    <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.78)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-line' }}>{curso.fuentes}</p>
+                  </CursoSeccion>
+                )}
+              </div>
+            )}
+
+            
 
             {lecciones.length === 0 && (
               <div style={{

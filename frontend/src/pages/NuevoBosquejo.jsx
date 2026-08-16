@@ -35,6 +35,7 @@ const NuevoBosquejo = () => {
         conclusion: codificarSeccion(datos.conclusion),
       };
       const resultado = await createBosquejo(payload);
+      try { localStorage.removeItem('bosqu_borrador_nuevo'); } catch {}
       toast.success('Bosquejo guardado');
       navigate(`/bosquejos/${resultado.id}`);
     } catch {
@@ -52,6 +53,7 @@ const NuevoBosquejo = () => {
       onGuardar={handleGuardar}
       onCancelar={() => navigate('/bosquejos')}
       guardando={guardando}
+      draftKey="nuevo"
     />
   );
 };

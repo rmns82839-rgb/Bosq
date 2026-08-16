@@ -100,7 +100,7 @@ export default function LeccionVista() {
           <CursoSeccion titulo="Símbolos, tipos y profecías" icono="🕎">
             {simbolos.length > 0 && (
               <Bloque titulo="Símbolos">
-                {simbolos.map(s => <Item key={s.id} nombre={s.nombre} texto={s.significado} pie={s.referencias} />)}
+                {simbolos.map(s => <SimboloItem key={s.id} simbolo={s} />)}
               </Bloque>
             )}
             {tipologias.length > 0 && (
@@ -169,4 +169,40 @@ function Item({ nombre, texto, pie, color = 'var(--gold)' }) {
       {pie && <span style={{ fontFamily: 'var(--mono)', fontSize: 9.5, color: 'rgba(255,255,255,0.4)' }}>{pie}</span>}
     </div>
   )
+}
+
+function SimboloItem({ simbolo }) {
+  const s = simbolo;
+  const preguntarIA = () => {
+    const q = `Trasfondo histórico y cultural del símbolo "${s.nombre}" en el mundo bíblico y antiguo ` +
+      `(${s.referencias || 'Apocalipsis'}): qué significaba en su época, costumbres, y cómo ilumina su sentido. ` +
+      `Con base en fuentes históricas reconocidas.`;
+    window.open(`https://www.perplexity.ai/search?q=${encodeURIComponent(q)}`, '_blank', 'noopener');
+  };
+
+  return (
+    <div style={{ borderRadius: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderLeft: '3px solid var(--gold)' }}>
+      <div style={{ fontFamily: 'var(--crimson)', fontSize: 15, color: 'var(--gold)', marginBottom: 2 }}>{s.nombre}</div>
+      {s.significado && <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)', lineHeight: 1.55, margin: '0 0 3px' }}>{s.significado}</p>}
+      {s.referencias && <span style={{ fontFamily: 'var(--mono)', fontSize: 9.5, color: 'rgba(255,255,255,0.4)' }}>{s.referencias}</span>}
+
+      {s.trasfondoCultural && (
+        <div style={{ marginTop: 10, borderRadius: 8, padding: '10px 12px', background: 'rgba(180,130,60,0.1)', border: '1px solid rgba(201,168,76,0.25)' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: '#D4A94C', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>🏛️ EN EL MUNDO ANTIGUO</span>
+          <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.78)', lineHeight: 1.6, margin: 0 }}>{s.trasfondoCultural}</p>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={preguntarIA}
+        style={{
+          marginTop: 8, fontFamily: 'var(--mono)', fontSize: 10, padding: '5px 12px', borderRadius: 999,
+          cursor: 'pointer', border: '1px solid rgba(201,168,76,0.4)', background: 'transparent', color: 'var(--gold)',
+        }}
+      >
+        🔎 Profundizar con IA ↗
+      </button>
+    </div>
+  );
 }
